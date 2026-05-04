@@ -1,6 +1,6 @@
 namespace AquariumManager.Application.DTOs;
 
-public class CreateInventoryLotDto
+public record CreateInventoryLotDto
 {
     public int SpeciesId { get; set; }
     public DateTime ArrivalDate { get; set; }
@@ -12,7 +12,7 @@ public class CreateInventoryLotDto
     public string? Notes { get; set; }
 }
 
-public class InventoryLotDto
+public record InventoryLotDto
 {
     public int Id { get; set; }
     public int SpeciesId { get; set; }
@@ -29,7 +29,7 @@ public class InventoryLotDto
     public string? Notes { get; set; }
 }
 
-public class RegisterMortalityDto
+public record RegisterMortalityDto
 {
     public int InventoryLotId { get; set; }
     public DateTime Date { get; set; }

@@ -1,4 +1,4 @@
-public class PagedResult<T>
+public record PagedResult<T>
 {
     public IReadOnlyList<T> Items { get; set; } = Array.Empty<T>();
     public int Page { get; set; }

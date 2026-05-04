@@ -1,4 +1,4 @@
-public class SalesReportResultDto : PagedResult<SalesReportItemDto>
+public record SalesReportResultDto : PagedResult<SalesReportItemDto>
 {
     
     public decimal TotalAmountInRange { get; set; }

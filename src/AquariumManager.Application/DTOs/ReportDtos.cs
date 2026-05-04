@@ -1,14 +1,14 @@
 namespace AquariumManager.Application.DTOs;
 
 // Stock Report
-public class StockReportDto
+public record StockReportDto
 {
     public List<StockReportItemDto> Items { get; set; } = new();
     public int TotalSpecies { get; set; }
     public int TotalStock { get; set; }
 }
 
-public class StockReportItemDto
+public record StockReportItemDto
 {
     public int SpeciesId { get; set; }
     public string CommonName { get; set; } = string.Empty;
@@ -19,7 +19,7 @@ public class StockReportItemDto
     public List<LotBreakdownDto> Lots { get; set; } = new();
 }
 
-public class LotBreakdownDto
+public record LotBreakdownDto
 {
     public int LotId { get; set; }
     public DateTime ArrivalDate { get; set; }
@@ -30,7 +30,7 @@ public class LotBreakdownDto
 }
 
 // Mortality Report
-public class MortalityReportDto
+public record MortalityReportDto
 {
     public List<MortalitySummaryDto> Summaries { get; set; } = new();
     public int TotalDeaths { get; set; }
@@ -38,7 +38,7 @@ public class MortalityReportDto
     public int TotalOtherCauses { get; set; }
 }
 
-public class MortalitySummaryDto
+public record MortalitySummaryDto
 {
     public int SpeciesId { get; set; }
     public string CommonName { get; set; } = string.Empty;
@@ -48,7 +48,7 @@ public class MortalitySummaryDto
     public List<MortalityRecordDto> Records { get; set; } = new();
 }
 
-public class MortalityRecordDto
+public record MortalityRecordDto
 {
     public int RecordId { get; set; }
     public int LotId { get; set; }
@@ -59,7 +59,7 @@ public class MortalityRecordDto
 }
 
 // Sales Report
-public class SalesReportDto
+public record SalesReportDto
 {
     public List<SalesSummaryDto> Sales { get; set; } = new();
     public decimal TotalRevenue { get; set; }
@@ -67,7 +67,7 @@ public class SalesReportDto
     public List<TopSpeciesDto> TopSpecies { get; set; } = new();
 }
 
-public class SalesSummaryDto
+public record SalesSummaryDto
 {
     public int SaleId { get; set; }
     public DateTime Date { get; set; }
@@ -76,7 +76,7 @@ public class SalesSummaryDto
     public int ItemCount { get; set; }
 }
 
-public class TopSpeciesDto
+public record TopSpeciesDto
 {
     public string CommonName { get; set; } = string.Empty;
     public int TotalQuantitySold { get; set; }
@@ -84,7 +84,7 @@ public class TopSpeciesDto
 }
 
 // Inventory Valuation
-public class InventoryValuationDto
+public record InventoryValuationDto
 {
     public decimal TotalCostValue { get; set; }
     public int TotalUnitsInStock { get; set; }
@@ -93,7 +93,7 @@ public class InventoryValuationDto
     public List<ValuationByCategoryDto> ByCategory { get; set; } = new();
 }
 
-public class ValuationByCategoryDto
+public record ValuationByCategoryDto
 {
     public string Category { get; set; } = string.Empty;
     public int UnitsInStock { get; set; }

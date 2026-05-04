@@ -1,6 +1,6 @@
 namespace AquariumManager.Application.DTOs;
 
-public class CreateSpeciesDto
+public record CreateSpeciesDto
 {
     public string CommonName { get; set; } = string.Empty;
     public string ScientificName { get; set; } = string.Empty;
@@ -16,7 +16,7 @@ public class CreateSpeciesDto
     public string ImageUrl { get; set; } = string.Empty;
 }
 
-public class UpdateSpeciesDto
+public record UpdateSpeciesDto
 {
     public string CommonName { get; set; } = string.Empty;
     public string ScientificName { get; set; } = string.Empty;
@@ -32,7 +32,7 @@ public class UpdateSpeciesDto
     public string ImageUrl { get; set; } = string.Empty;
 }
 
-public class SpeciesDto
+public record SpeciesDto
 {
     public int Id { get; set; }
     public string CommonName { get; set; } = string.Empty;

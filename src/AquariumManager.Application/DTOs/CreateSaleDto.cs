@@ -1,4 +1,4 @@
-public class CreateSaleDto
+public record CreateSaleDto
 {
     public DateTime Date { get; set; }
     public string CustomerName { get; set; } = string.Empty;

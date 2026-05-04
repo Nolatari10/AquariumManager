@@ -1,6 +1,6 @@
 namespace AquariumManager.Application.DTOs;
 
-public class SupplierDto
+public record SupplierDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = default!;

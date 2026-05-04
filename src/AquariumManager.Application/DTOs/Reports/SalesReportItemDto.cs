@@ -1,4 +1,4 @@
-public class SalesReportItemDto
+public record SalesReportItemDto
 {
     public int SaleId { get; set; }
     public DateTime Date { get; set; }

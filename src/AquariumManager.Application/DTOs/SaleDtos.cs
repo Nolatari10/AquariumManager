@@ -1,6 +1,6 @@
 namespace AquariumManager.Application.DTOs;
 
-public class SaleDto
+public record SaleDto
 {
     public int Id { get; set; }
     public DateTime Date { get; set; }
@@ -9,7 +9,7 @@ public class SaleDto
     public List<SaleItemDto> Items { get; set; } = new();
 }
 
-public class SaleItemDto
+public record SaleItemDto
 {
     public int Id { get; set; }
     public int SpeciesId { get; set; }

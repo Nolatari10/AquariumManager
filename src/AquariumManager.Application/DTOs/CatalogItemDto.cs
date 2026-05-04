@@ -1,6 +1,6 @@
 namespace AquariumManager.Application.DTOs;
 
-public class CatalogItemDto
+public record CatalogItemDto
 {
     public int SpeciesId { get; set; }
     public string CommonName { get; set; } = string.Empty;
