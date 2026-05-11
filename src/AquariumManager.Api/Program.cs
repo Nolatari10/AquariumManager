@@ -1,22 +1,65 @@
+using System.Text;
 using AquariumManager.Application.Services;
 using AquariumManager.Domain.Interfaces;
 using AquariumManager.Infrastructure.Persistence;
 using AquariumManager.Infrastructure.Repositories;
 using AquariumManager.Infrastructure.UnitOfWork;
 using AquariumManager.Api.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-
-var myCorsPolicy = "_myCorsPolicy";
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load .env file if present (maps flat keys to structured config)
+var envPath = Path.Combine(builder.Environment.ContentRootPath, ".env");
+if (File.Exists(envPath))
+{
+    foreach (var line in File.ReadAllLines(envPath))
+    {
+        var trimmed = line.Trim();
+        if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith('#'))
+            continue;
+
+        var eq = trimmed.IndexOf('=');
+        if (eq < 0)
+            continue;
+
+        var envKey = trimmed[..eq].Trim();
+        var value = trimmed[(eq + 1)..].Trim();
+
+        // Map flat .env keys to structured config sections
+        switch (envKey)
+        {
+            case "DB_CONNECTION":
+                builder.Configuration["ConnectionStrings:DefaultConnection"] = value;
+                break;
+            case "JWT_KEY":
+                builder.Configuration["Jwt:Key"] = value;
+                break;
+            case "JWT_ISSUER":
+                builder.Configuration["Jwt:Issuer"] = value;
+                break;
+            case "JWT_AUDIENCE":
+                builder.Configuration["Jwt:Audience"] = value;
+                break;
+            case "CORS_ORIGIN":
+                builder.Configuration["Cors:Origin"] = value;
+                break;
+        }
+    }
+}
+
+var myCorsPolicy = "_myCorsPolicy";
+
 // CORS
+var corsOrigin = builder.Configuration["Cors:Origin"] ?? "http://localhost:5173";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: myCorsPolicy, policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins(corsOrigin)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -34,6 +77,7 @@ builder.Services.AddScoped<ISpeciesRepository, SpeciesRepository>();
 builder.Services.AddScoped<IInventoryLotRepository, InventoryLotRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISaleRepository, SaleRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -45,6 +89,33 @@ builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+    };
+});
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("OwnerOnly", policy => policy.RequireRole("Owner"));
 // Controllers
 builder.Services
     .AddControllers()
@@ -72,6 +143,7 @@ app.UseMiddleware<GlobalExceptionHandler>();
 app.UseCors(myCorsPolicy);
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
