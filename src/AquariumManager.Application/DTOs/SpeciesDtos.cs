@@ -48,3 +48,27 @@ public record SpeciesDto
     public string? Notes { get; set; }
     public string ImageUrl { get;  set; } = string.Empty;
 }
+
+public record BulkImportSpeciesDto
+{
+    public List<CreateSpeciesDto> Species { get; set; } = new();
+}
+
+public record BulkImportResultDto
+{
+    public int TotalProcessed { get; set; }
+    public int Created { get; set; }
+    public int Skipped { get; set; }
+    public List<string> Errors { get; set; } = new();
+}
+
+public record BulkDeleteSpeciesDto
+{
+    public List<int> Ids { get; set; } = new();
+}
+
+public record BulkDeleteResultDto
+{
+    public int Requested { get; set; }
+    public int Deleted { get; set; }
+}

@@ -3,8 +3,9 @@ using AquariumManager.Domain.Entities;
 public class InventoryLot
 {
     public int Id { get; private set; }
-    public int SpeciesId { get; private set; }
-    public Species Species { get; private set; } = null!;
+    public int? SpeciesId { get; private set; }
+    public string SpeciesName { get; private set; } = default!;
+    public Species? Species { get; private set; }
 
     public DateTime ArrivalDate { get; private set; }
     public int InitialQuantity { get; private set; }
@@ -21,7 +22,8 @@ public class InventoryLot
     private InventoryLot() { }
 
     public InventoryLot(
-        int speciesId,
+        string speciesName,
+        int? speciesId,
         DateTime arrivalDate,
         int initialQuantity,
         int deadOnArrival,
@@ -30,12 +32,16 @@ public class InventoryLot
         string? batchNumber = null,
         string? notes = null)
     {
+        if (string.IsNullOrWhiteSpace(speciesName))
+            throw new ArgumentException("Species name is required.", nameof(speciesName));
+
         if (initialQuantity <= 0)
             throw new ArgumentException("Initial quantity must be greater than zero.", nameof(initialQuantity));
 
         if (deadOnArrival < 0 || deadOnArrival > initialQuantity)
             throw new ArgumentException("Dead on arrival must be between 0 and initial quantity.", nameof(deadOnArrival));
 
+        SpeciesName = speciesName;
         SpeciesId = speciesId;
         ArrivalDate = arrivalDate;
         InitialQuantity = initialQuantity;

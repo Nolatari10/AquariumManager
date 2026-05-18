@@ -22,6 +22,125 @@ namespace AquariumManager.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("AquariumManager.Domain.Entities.FertilizationLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DoseAmount")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<string>("DoseUnit")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("DosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("EstimatedIronPpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("EstimatedNitratePpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("EstimatedPhosphatePpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("EstimatedPotassiumPpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<int?>("FertilizerPresetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FertilizerType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsAdjustment")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsScheduled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int>("TankId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FertilizerPresetId");
+
+                    b.HasIndex("TankId");
+
+                    b.ToTable("FertilizationLogs", (string)null);
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.FertilizerPreset", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("DefaultDoseAmount")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<string>("DefaultDoseUnit")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FertilizerType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("IronPerDose")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("NitratePerDose")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("OwnerUserId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("PhosphatePerDose")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("PotassiumPerDose")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.ToTable("FertilizerPresets", (string)null);
+                });
+
             modelBuilder.Entity("AquariumManager.Domain.Entities.InventoryItem", b =>
                 {
                     b.Property<int>("Id")
@@ -47,6 +166,51 @@ namespace AquariumManager.Infrastructure.Migrations
                     b.HasIndex("SpeciesId");
 
                     b.ToTable("InventoryItems", (string)null);
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.MaintenanceLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MaintenanceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("PerformedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReminderFrequencyDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TankId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("WaterChangeLiters")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int?>("WaterChangePercent")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TankId");
+
+                    b.ToTable("MaintenanceLogs", (string)null);
                 });
 
             modelBuilder.Entity("AquariumManager.Domain.Entities.Sale", b =>
@@ -133,6 +297,235 @@ namespace AquariumManager.Infrastructure.Migrations
                     b.ToTable("Species", (string)null);
                 });
 
+            modelBuilder.Entity("AquariumManager.Domain.Entities.Tank", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Co2Injection")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FilterDescription")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("HeaterSetpointCelsius")
+                        .HasColumnType("decimal(4,1)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LightDescription")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("OwnerUserId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SizeLiters")
+                        .HasColumnType("decimal(8,1)");
+
+                    b.Property<string>("Substrate")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TankType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.ToTable("Tanks", (string)null);
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.TankPhoto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("LinkedLogId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LinkedLogType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("TakenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TankId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TankId");
+
+                    b.ToTable("TankPhotos", (string)null);
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.TargetParameterRange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("MaxValue")
+                        .HasColumnType("decimal(8,3)");
+
+                    b.Property<decimal>("MinValue")
+                        .HasColumnType("decimal(8,3)");
+
+                    b.Property<string>("ParameterName")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("TankId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TankId");
+
+                    b.ToTable("TargetParameterRanges", (string)null);
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.WaterParameterLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("AmmoniaPpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("CarbonateHardness")
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<decimal?>("Co2Ppm")
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("GeneralHardness")
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<decimal?>("IronPpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<DateTime>("MeasuredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("NitratePpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("NitritePpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal?>("PhosphatePpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("PotassiumPpm")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("SalinityPpt")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("TankId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TdsPpm")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("TemperatureCelsius")
+                        .HasColumnType("decimal(4,1)");
+
+                    b.Property<decimal?>("pH")
+                        .HasColumnType("decimal(4,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TankId");
+
+                    b.ToTable("WaterParameterLogs", (string)null);
+                });
+
             modelBuilder.Entity("InventoryLot", b =>
                 {
                     b.Property<int>("Id")
@@ -156,8 +549,13 @@ namespace AquariumManager.Infrastructure.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SpeciesId")
+                    b.Property<int?>("SpeciesId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SpeciesName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<int?>("SupplierId")
                         .HasColumnType("int");
@@ -268,6 +666,34 @@ namespace AquariumManager.Infrastructure.Migrations
                     b.ToTable("Suppliers", (string)null);
                 });
 
+            modelBuilder.Entity("AquariumManager.Domain.Entities.FertilizationLog", b =>
+                {
+                    b.HasOne("AquariumManager.Domain.Entities.FertilizerPreset", "FertilizerPreset")
+                        .WithMany()
+                        .HasForeignKey("FertilizerPresetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("AquariumManager.Domain.Entities.Tank", "Tank")
+                        .WithMany("FertilizationLogs")
+                        .HasForeignKey("TankId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FertilizerPreset");
+
+                    b.Navigation("Tank");
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.FertilizerPreset", b =>
+                {
+                    b.HasOne("AquariumManager.Domain.Entities.User", "OwnerUser")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("OwnerUser");
+                });
+
             modelBuilder.Entity("AquariumManager.Domain.Entities.InventoryItem", b =>
                 {
                     b.HasOne("AquariumManager.Domain.Entities.Species", "Species")
@@ -279,13 +705,67 @@ namespace AquariumManager.Infrastructure.Migrations
                     b.Navigation("Species");
                 });
 
+            modelBuilder.Entity("AquariumManager.Domain.Entities.MaintenanceLog", b =>
+                {
+                    b.HasOne("AquariumManager.Domain.Entities.Tank", "Tank")
+                        .WithMany("MaintenanceLogs")
+                        .HasForeignKey("TankId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tank");
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.Tank", b =>
+                {
+                    b.HasOne("AquariumManager.Domain.Entities.User", "OwnerUser")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("OwnerUser");
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.TankPhoto", b =>
+                {
+                    b.HasOne("AquariumManager.Domain.Entities.Tank", "Tank")
+                        .WithMany("TankPhotos")
+                        .HasForeignKey("TankId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tank");
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.TargetParameterRange", b =>
+                {
+                    b.HasOne("AquariumManager.Domain.Entities.Tank", "Tank")
+                        .WithMany("TargetParameterRanges")
+                        .HasForeignKey("TankId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tank");
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.WaterParameterLog", b =>
+                {
+                    b.HasOne("AquariumManager.Domain.Entities.Tank", "Tank")
+                        .WithMany("WaterParameterLogs")
+                        .HasForeignKey("TankId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tank");
+                });
+
             modelBuilder.Entity("InventoryLot", b =>
                 {
                     b.HasOne("AquariumManager.Domain.Entities.Species", "Species")
                         .WithMany("InventoryLots")
                         .HasForeignKey("SpeciesId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Supplier", "Supplier")
                         .WithMany("InventoryLots")
@@ -337,6 +817,19 @@ namespace AquariumManager.Infrastructure.Migrations
                     b.Navigation("InventoryItems");
 
                     b.Navigation("InventoryLots");
+                });
+
+            modelBuilder.Entity("AquariumManager.Domain.Entities.Tank", b =>
+                {
+                    b.Navigation("FertilizationLogs");
+
+                    b.Navigation("MaintenanceLogs");
+
+                    b.Navigation("TankPhotos");
+
+                    b.Navigation("TargetParameterRanges");
+
+                    b.Navigation("WaterParameterLogs");
                 });
 
             modelBuilder.Entity("InventoryLot", b =>

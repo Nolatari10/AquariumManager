@@ -73,4 +73,21 @@ public class InventoryLotRepository : IInventoryLotRepository
         .ToListAsync();
 
 }
+
+    public async Task<IReadOnlyList<InventoryLot>> GetPagedAsync(int page, int pageSize)
+    {
+        return await _context.InventoryLots
+            .Include(l => l.Species)
+            .Include(l => l.Supplier)
+            .Include(l => l.MortalityRecords)
+            .OrderByDescending(l => l.ArrivalDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetCountAsync()
+    {
+        return await _context.InventoryLots.CountAsync();
+    }
 }

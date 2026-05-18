@@ -1,4 +1,5 @@
 using AquariumManager.Application.DTOs;
+using AquariumManager.Domain.Entities;
 using AquariumManager.Domain.Interfaces;
 
 namespace AquariumManager.Application.Services;
@@ -8,15 +9,18 @@ public class ReportService : IReportService
     private readonly ISpeciesRepository _speciesRepository;
     private readonly IInventoryLotRepository _lotRepository;
     private readonly ISaleRepository _saleRepository;
+    private readonly ISupplierRepository _supplierRepository;
 
     public ReportService(
         ISpeciesRepository speciesRepository,
         IInventoryLotRepository lotRepository,
-        ISaleRepository saleRepository)
+        ISaleRepository saleRepository,
+        ISupplierRepository supplierRepository)
     {
         _speciesRepository = speciesRepository;
         _lotRepository = lotRepository;
         _saleRepository = saleRepository;
+        _supplierRepository = supplierRepository;
     }
 
     public async Task<StockReportDto> GetStockReportAsync()
@@ -60,10 +64,10 @@ public class ReportService : IReportService
         return report;
     }
 
-    public async Task<MortalityReportDto> GetMortalityReportAsync(DateTime? startDate = null, DateTime? endDate = null, int? speciesId = null)
+    public async Task<MortalityReportDto> GetMortalityReportAsync(DateTime? startDate = null, DateTime? endDate = null, int? speciesId = null, int? supplierId = null)
     {
         var speciesList = speciesId.HasValue
-            ? (await _speciesRepository.GetByIdAsync(speciesId.Value) is { } s ? new[] { s } : Array.Empty<Domain.Entities.Species>())
+            ? (await _speciesRepository.GetByIdAsync(speciesId.Value) is { } s ? new[] { s } : Array.Empty<Species>())
             : await _speciesRepository.GetAllAsync();
 
         var report = new MortalityReportDto();
@@ -71,38 +75,44 @@ public class ReportService : IReportService
         foreach (var species in speciesList)
         {
             var lots = await _lotRepository.GetBySpeciesAsync(species.Id);
-            var allRecords = lots.SelectMany(l => l.MortalityRecords).ToList();
 
-            if (startDate.HasValue)
-                allRecords = allRecords.Where(r => r.Date >= startDate.Value).ToList();
-            if (endDate.HasValue)
-                allRecords = allRecords.Where(r => r.Date <= endDate.Value).ToList();
-
-            if (allRecords.Count == 0) continue;
-
-            var sold = allRecords.Where(r => string.Equals(r.Cause, "Sold", StringComparison.OrdinalIgnoreCase)).Sum(r => r.Quantity);
-            var otherCauses = allRecords.Where(r => !string.Equals(r.Cause, "Sold", StringComparison.OrdinalIgnoreCase)).Sum(r => r.Quantity);
-            var totalDeaths = sold + otherCauses;
-
-            report.Summaries.Add(new MortalitySummaryDto
+            foreach (var lot in lots)
             {
-                SpeciesId = species.Id,
-                CommonName = species.CommonName,
-                TotalDeaths = totalDeaths,
-                Sold = sold,
-                OtherCauses = otherCauses,
-                Records = allRecords
-                    .OrderByDescending(r => r.Date)
-                    .Select(r => new MortalityRecordDto
-                    {
-                        RecordId = r.Id,
-                        LotId = r.InventoryLotId,
-                        Date = r.Date,
-                        Quantity = r.Quantity,
-                        Cause = r.Cause,
-                        Notes = r.Notes
-                    }).ToList()
-            });
+                if (supplierId.HasValue && lot.SupplierId != supplierId.Value) continue;
+
+                var records = lot.MortalityRecords.AsEnumerable();
+                if (startDate.HasValue)
+                    records = records.Where(r => r.Date >= startDate.Value);
+                if (endDate.HasValue)
+                    records = records.Where(r => r.Date <= endDate.Value);
+
+                var recordsList = records.ToList();
+                if (recordsList.Count == 0) continue;
+
+                var sold = recordsList.Where(r => string.Equals(r.Cause, "Sold", StringComparison.OrdinalIgnoreCase)).Sum(r => r.Quantity);
+                var otherCauses = recordsList.Where(r => !string.Equals(r.Cause, "Sold", StringComparison.OrdinalIgnoreCase)).Sum(r => r.Quantity);
+
+                report.Summaries.Add(new MortalitySummaryDto
+                {
+                    SpeciesId = species.Id,
+                    CommonName = species.CommonName,
+                    SupplierName = lot.Supplier?.Name,
+                    TotalDeaths = sold + otherCauses,
+                    Sold = sold,
+                    OtherCauses = otherCauses,
+                    Records = recordsList
+                        .OrderByDescending(r => r.Date)
+                        .Select(r => new MortalityRecordDto
+                        {
+                            RecordId = r.Id,
+                            LotId = r.InventoryLotId,
+                            Date = r.Date,
+                            Quantity = r.Quantity,
+                            Cause = r.Cause,
+                            Notes = r.Notes
+                        }).ToList()
+                });
+            }
         }
 
         report.TotalDeaths = report.Summaries.Sum(s => s.TotalDeaths);
@@ -116,12 +126,11 @@ public class ReportService : IReportService
     {
         if (page <= 0) page = 1;
         if (pageSize <= 0) pageSize = 50;
-        
-        
-        var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
+
+        var allSales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
         var report = new SalesReportDto();
 
-        report.Sales = sales.Select(s => new SalesSummaryDto
+        var salesList = allSales.Select(s => new SalesSummaryDto
         {
             SaleId = s.Id,
             Date = s.Date,
@@ -130,11 +139,13 @@ public class ReportService : IReportService
             ItemCount = s.Items.Count
         }).OrderByDescending(s => s.Date).ToList();
 
-        report.TotalRevenue = report.Sales.Sum(s => s.TotalAmount);
-        report.TotalItemsSold = sales.Sum(s => s.Items.Sum(i => i.Quantity));
+        var paged = salesList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-        // Top species by quantity sold
-        var speciesGroups = sales
+        report.Sales = paged;
+        report.TotalRevenue = salesList.Sum(s => s.TotalAmount);
+        report.TotalItemsSold = allSales.Sum(s => s.Items.Sum(i => i.Quantity));
+
+        var speciesGroups = allSales
             .SelectMany(s => s.Items)
             .GroupBy(i => new { i.SpeciesId, SpeciesName = i.Species?.CommonName ?? "Unknown" })
             .Select(g => new TopSpeciesDto
@@ -202,5 +213,120 @@ public class ReportService : IReportService
             AverageUnitCost = totalUnits > 0 ? totalCostValue / totalUnits : 0,
             ByCategory = byCategory.Values.OrderByDescending(c => c.TotalCostValue).ToList()
         };
+    }
+
+    public async Task<SupplierPerformanceReportDto> GetSupplierPerformanceAsync(DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var suppliers = await _supplierRepository.GetAllAsync();
+        var report = new SupplierPerformanceReportDto();
+        var performances = new List<SupplierPerformanceDto>();
+
+        foreach (var supplier in suppliers)
+        {
+            var lots = supplier.InventoryLots.ToList();
+            if (lots.Count == 0) continue;
+
+            var totalDOA = lots.Sum(l => l.DeadOnArrival);
+            var mortalityRecords = lots.SelectMany(l => l.MortalityRecords).AsEnumerable();
+
+            if (startDate.HasValue)
+                mortalityRecords = mortalityRecords.Where(r => r.Date >= startDate.Value);
+            if (endDate.HasValue)
+                mortalityRecords = mortalityRecords.Where(r => r.Date <= endDate.Value);
+
+            var recordsList = mortalityRecords.ToList();
+            var nonSoldMortality = recordsList
+                .Where(r => !string.Equals(r.Cause, "Sold", StringComparison.OrdinalIgnoreCase))
+                .Sum(r => r.Quantity);
+
+            var totalInitial = lots.Sum(l => l.InitialQuantity);
+            var viableInitial = totalInitial - totalDOA;
+            var mortalityRate = viableInitial > 0
+                ? Math.Round((decimal)nonSoldMortality / viableInitial * 100, 1)
+                : 0;
+
+            var costLost = recordsList
+                .Where(r => !string.Equals(r.Cause, "Sold", StringComparison.OrdinalIgnoreCase))
+                .Sum(r => r.Quantity * r.InventoryLot.UnitCost);
+
+            performances.Add(new SupplierPerformanceDto
+            {
+                SupplierId = supplier.Id,
+                SupplierName = supplier.Name,
+                TotalLotsReceived = lots.Count,
+                TotalDOA = totalDOA,
+                NonSoldMortality = nonSoldMortality,
+                CostLostToMortality = costLost,
+                MortalityRatePercent = mortalityRate
+            });
+        }
+
+        var ranked = performances
+            .OrderByDescending(p => p.MortalityRatePercent)
+            .Select((p, i) => { p.Rank = i + 1; return p; })
+            .ToList();
+
+        report.Suppliers = ranked;
+        report.TotalCostLost = ranked.Sum(p => p.CostLostToMortality);
+        report.AverageMortalityRate = ranked.Count > 0
+            ? Math.Round(ranked.Average(p => p.MortalityRatePercent), 1)
+            : 0;
+
+        return report;
+    }
+
+    public async Task<InventoryTurnoverReportDto> GetInventoryTurnoverAsync(int? speciesId = null, int? supplierId = null)
+    {
+        var speciesList = speciesId.HasValue
+            ? (await _speciesRepository.GetByIdAsync(speciesId.Value) is { } s ? new[] { s } : Array.Empty<Species>())
+            : await _speciesRepository.GetAllAsync();
+
+        var report = new InventoryTurnoverReportDto();
+        var today = DateTime.UtcNow;
+
+        foreach (var species in speciesList)
+        {
+            var lots = await _lotRepository.GetBySpeciesAsync(species.Id);
+            foreach (var lot in lots)
+            {
+                if (lot.GetCurrentStock() <= 0) continue;
+                if (supplierId.HasValue && lot.SupplierId != supplierId.Value) continue;
+
+                var daysInStock = (today - lot.ArrivalDate).Days;
+                var soldQuantity = lot.MortalityRecords
+                    .Where(r => string.Equals(r.Cause, "Sold", StringComparison.OrdinalIgnoreCase))
+                    .Sum(r => r.Quantity);
+
+                string agingStatus;
+                if (daysInStock < 30) agingStatus = "Fresh";
+                else if (daysInStock <= 90) agingStatus = "Aging";
+                else agingStatus = "Old";
+
+                report.Lots.Add(new InventoryTurnoverDto
+                {
+                    LotId = lot.Id,
+                    SpeciesName = species.CommonName,
+                    SupplierName = lot.Supplier?.Name,
+                    ArrivalDate = lot.ArrivalDate,
+                    DaysInStock = daysInStock,
+                    CurrentStock = lot.GetCurrentStock(),
+                    InitialQuantity = lot.InitialQuantity,
+                    SoldQuantity = soldQuantity,
+                    UnitCost = lot.UnitCost,
+                    AgingStatus = agingStatus,
+                    CostAtRisk = lot.GetCurrentStock() * lot.UnitCost
+                });
+            }
+        }
+
+        report.Lots = report.Lots.OrderByDescending(l => l.DaysInStock).ToList();
+        report.FreshLots = report.Lots.Count(l => l.AgingStatus == "Fresh");
+        report.AgingLots = report.Lots.Count(l => l.AgingStatus == "Aging");
+        report.OldLots = report.Lots.Count(l => l.AgingStatus == "Old");
+        report.AverageDaysInStock = report.Lots.Count > 0
+            ? Math.Round(report.Lots.Average(l => (decimal)l.DaysInStock), 1)
+            : 0;
+
+        return report;
     }
 }

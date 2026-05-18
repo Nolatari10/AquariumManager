@@ -41,6 +41,22 @@ public class SaleRepository : ISaleRepository
             .ToListAsync();
     }
 
+    public async Task<IReadOnlyList<Sale>> GetPagedAsync(int page, int pageSize)
+    {
+        return await _context.Sales
+            .Include(s => s.Items)
+                .ThenInclude(si => si.Species)
+            .OrderByDescending(s => s.Date)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetCountAsync()
+    {
+        return await _context.Sales.CountAsync();
+    }
+
     public async Task AddAsync(Sale sale)
     {
         _context.Sales.Add(sale);

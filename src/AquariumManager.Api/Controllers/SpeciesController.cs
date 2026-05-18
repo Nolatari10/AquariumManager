@@ -1,11 +1,13 @@
 using AquariumManager.Application.DTOs;
 using AquariumManager.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AquariumManager.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class SpeciesController : ControllerBase
 {
     private readonly ISpeciesService _speciesService;
@@ -15,12 +17,14 @@ public class SpeciesController : ControllerBase
         _speciesService = speciesService;
     }
 
-    // GET: api/Species
+    // GET: api/Species?page=1&pageSize=20
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SpeciesDto>>> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var species = await _speciesService.GetAllAsync();
-        return Ok(species);
+        var result = await _speciesService.GetPagedAsync(page, pageSize);
+        return Ok(result);
     }
 
     // GET: api/Species/5
@@ -58,7 +62,6 @@ public class SpeciesController : ControllerBase
 
     if (!result.Success)
     {
-        // Diferenciar si es validación o recurso no encontrado
         if (result.ErrorMessage == "La especie especificada no existe.")
             return NotFound(result.ErrorMessage);
 
@@ -66,5 +69,36 @@ public class SpeciesController : ControllerBase
     }
 
     return NoContent();
+    }
+
+    // POST: api/Species/bulk-import
+    [HttpPost("bulk-import")]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<IActionResult> BulkImport(BulkImportSpeciesDto dto)
+    {
+        if (dto.Species is null || dto.Species.Count == 0)
+            return BadRequest("No species provided.");
+
+        var result = await _speciesService.BulkImportAsync(dto.Species);
+        return Ok(result);
+    }
+
+    // DELETE: api/Species/5
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _speciesService.DeleteAsync(id);
+        return NoContent();
+    }
+
+    // POST: api/Species/batch-delete
+    [HttpPost("batch-delete")]
+    public async Task<IActionResult> BulkDelete(BulkDeleteSpeciesDto dto)
+    {
+        if (dto.Ids is null || dto.Ids.Count == 0)
+            return BadRequest("No ids provided.");
+
+        var result = await _speciesService.BulkDeleteAsync(dto.Ids);
+        return Ok(result);
     }
 }

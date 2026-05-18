@@ -1,11 +1,13 @@
 using AquariumManager.Application.DTOs;
 using AquariumManager.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AquariumManager.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class InventoryLotsController : ControllerBase
 {
     private readonly IInventoryLotService _inventoryLotService;
@@ -64,10 +66,12 @@ public async Task<ActionResult<BiologicalStockDto>> GetBiologicalStock(int speci
 }
 
    [HttpGet]
-    public async Task<ActionResult<IEnumerable<InventoryLotDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<InventoryLotDto>>> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var lots = await _inventoryLotService.GetAllAsync();
-        return Ok(lots);
+        var result = await _inventoryLotService.GetPagedAsync(page, pageSize);
+        return Ok(result);
     }
 
 

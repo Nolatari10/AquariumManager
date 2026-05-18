@@ -2,7 +2,8 @@ namespace AquariumManager.Application.DTOs;
 
 public record CreateInventoryLotDto
 {
-    public int SpeciesId { get; set; }
+    public string SpeciesName { get; set; } = string.Empty;
+    public int? SpeciesId { get; set; }
     public DateTime ArrivalDate { get; set; }
     public int InitialQuantity { get; set; }
     public int DeadOnArrival { get; set; }
@@ -15,7 +16,8 @@ public record CreateInventoryLotDto
 public record InventoryLotDto
 {
     public int Id { get; set; }
-    public int SpeciesId { get; set; }
+    public string SpeciesName { get; set; } = string.Empty;
+    public int? SpeciesId { get; set; }
     public string SpeciesCommonName { get; set; } = string.Empty;
     public DateTime ArrivalDate { get; set; }
     public int InitialQuantity { get; set; }

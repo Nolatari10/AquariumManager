@@ -29,6 +29,20 @@ public class SpeciesRepository : ISpeciesRepository
             .ToListAsync();
     }
 
+    public async Task<IReadOnlyList<Species>> GetPagedAsync(int page, int pageSize)
+    {
+        return await _context.Species
+            .OrderBy(s => s.CommonName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetCountAsync()
+    {
+        return await _context.Species.CountAsync();
+    }
+
     public async Task<Species> AddAsync(Species species)
     {
         _context.Species.Add(species);
@@ -52,5 +66,20 @@ public class SpeciesRepository : ISpeciesRepository
 
         _context.Species.Remove(species);
         await _context.SaveChangesAsync();
+    }
+
+    public void Track(Species species)
+    {
+        _context.Species.Add(species);
+    }
+
+    public async Task DeleteRangeAsync(IEnumerable<int> ids)
+    {
+        var list = await _context.Species.Where(s => ids.Contains(s.Id)).ToListAsync();
+        if (list.Count > 0)
+        {
+            _context.Species.RemoveRange(list);
+            await _context.SaveChangesAsync();
+        }
     }
 }

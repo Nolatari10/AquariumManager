@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using AquariumManager.Application.Services;
 using AquariumManager.Domain.Interfaces;
 using AquariumManager.Infrastructure.Persistence;
@@ -79,6 +80,15 @@ builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+// Tank module repositories
+builder.Services.AddScoped<ITankRepository, TankRepository>();
+builder.Services.AddScoped<IWaterParameterLogRepository, WaterParameterLogRepository>();
+builder.Services.AddScoped<IMaintenanceLogRepository, MaintenanceLogRepository>();
+builder.Services.AddScoped<IFertilizationLogRepository, FertilizationLogRepository>();
+builder.Services.AddScoped<ITankPhotoRepository, TankPhotoRepository>();
+builder.Services.AddScoped<IFertilizerPresetRepository, FertilizerPresetRepository>();
+builder.Services.AddScoped<ITargetParameterRangeRepository, TargetParameterRangeRepository>();
+
 // Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -90,6 +100,10 @@ builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Tank module services
+builder.Services.AddScoped<ITankService, TankService>();
+builder.Services.AddScoped<IFertilizerPresetService, FertilizerPresetService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -122,6 +136,7 @@ builder.Services
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
 // Swagger

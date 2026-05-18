@@ -22,8 +22,25 @@ public class InventoryLotService : IInventoryLotService
 
     public async Task<InventoryLotDto> CreateLotAsync(CreateInventoryLotDto dto)
     {
-        var species = await _speciesRepository.GetByIdAsync(dto.SpeciesId)
+        if (string.IsNullOrWhiteSpace(dto.SpeciesName))
+            throw new InvalidOperationException("El nombre de especie es requerido.");
+
+        if (dto.InitialQuantity <= 0)
+            throw new InvalidOperationException("Cantidad inicial debe ser mayor a cero.");
+        if (dto.DeadOnArrival < 0)
+            throw new InvalidOperationException("Decesos al llegar no debe ser negativa.");
+        if (dto.DeadOnArrival > dto.InitialQuantity)
+            throw new InvalidOperationException("Decesos al llegar no puede exceder la cantidad inicial.");
+
+        if (dto.UnitCost <= 0)
+            throw new InvalidOperationException("Costo unitario debe ser mayor a cero.");
+
+        Species? species = null;
+        if (dto.SpeciesId.HasValue)
+        {
+            species = await _speciesRepository.GetByIdAsync(dto.SpeciesId.Value)
                       ?? throw new InvalidOperationException($"La especie {dto.SpeciesId} no fue encontrada.");
+        }
 
         Supplier? supplier = null;
         if (dto.SupplierId.HasValue)
@@ -31,17 +48,9 @@ public class InventoryLotService : IInventoryLotService
             supplier = await _supplierRepository.GetByIdAsync(dto.SupplierId.Value)
                        ?? throw new InvalidOperationException($"Proveedor {dto.SupplierId.Value} no fue encontrado.");
         }
-         if(dto.InitialQuantity <= 0)
-             throw new InvalidOperationException("Cantidad inicial debe ser mayor a cero.");
-        if(dto.DeadOnArrival < 0)
-             throw new InvalidOperationException("Decesos al llegar no debe ser negativa.");
-        if(dto.DeadOnArrival > dto.InitialQuantity)
-             throw new InvalidOperationException("Decesos al llegar no puede exceder la cantidad inicial.");
-        
-        if(dto.UnitCost <= 0)
-            throw new InvalidOperationException("Costo unitario debe ser mayor a cero."); 
-        
+
         var lot = new InventoryLot(
+            speciesName: dto.SpeciesName,
             speciesId: dto.SpeciesId,
             arrivalDate: dto.ArrivalDate,
             initialQuantity: dto.InitialQuantity,
@@ -111,13 +120,14 @@ public class InventoryLotService : IInventoryLotService
     };
     }
 
-    private static InventoryLotDto MapToDto(InventoryLot lot, Species species, Supplier? supplier)
+    private static InventoryLotDto MapToDto(InventoryLot lot, Species? species, Supplier? supplier)
     {
         return new InventoryLotDto
         {
             Id = lot.Id,
             SpeciesId = lot.SpeciesId,
-            SpeciesCommonName = species.CommonName,
+            SpeciesName = lot.SpeciesName,
+            SpeciesCommonName = species?.CommonName ?? string.Empty,
             ArrivalDate = lot.ArrivalDate,
             InitialQuantity = lot.InitialQuantity,
             DeadOnArrival = lot.DeadOnArrival,
@@ -135,5 +145,18 @@ public class InventoryLotService : IInventoryLotService
     {
         var lots = await _lotRepository.GetAllAsync();
         return lots.Select(lot => MapToDto(lot, lot.Species, lot.Supplier)).ToList();
+    }
+
+    public async Task<PagedResult<InventoryLotDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var lots = await _lotRepository.GetPagedAsync(page, pageSize);
+        var totalCount = await _lotRepository.GetCountAsync();
+        return new PagedResult<InventoryLotDto>
+        {
+            Items = lots.Select(lot => MapToDto(lot, lot.Species, lot.Supplier)).ToList(),
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 }

@@ -148,6 +148,19 @@ public class SaleService : ISaleService
         return sales.Select(MapToDto).ToList();
     }
 
+    public async Task<PagedResult<SaleDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var sales = await _saleRepository.GetPagedAsync(page, pageSize);
+        var totalCount = await _saleRepository.GetCountAsync();
+        return new PagedResult<SaleDto>
+        {
+            Items = sales.Select(MapToDto).ToList(),
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
     private static SaleDto MapToDto(Sale sale)
     {
         return new SaleDto

@@ -30,7 +30,6 @@ public class CatalogService : ICatalogService
 
             var currentStock = stock?.CurrentBiologicalStock ?? 0;
 
-            // Si quieres solo especies con stock > 0, puedes filtrar aquí.
              if (currentStock <= 0) continue;
 
             result.Add(new CatalogItemDto
@@ -48,5 +47,24 @@ public class CatalogService : ICatalogService
         }
 
         return result;
+    }
+
+    public async Task<PagedResult<CatalogItemDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var allItems = await GetCatalogAsync();
+        var totalCount = allItems.Count;
+
+        var pagedItems = allItems
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return new PagedResult<CatalogItemDto>
+        {
+            Items = pagedItems,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 }

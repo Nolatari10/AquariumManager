@@ -1,12 +1,14 @@
 
 using AquariumManager.Application.DTOs;
 using AquariumManager.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AquariumManager.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class SalesController : ControllerBase
 {
     private readonly ISaleService _saleService;
@@ -27,12 +29,14 @@ public class SalesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
     }
 
-    // GET: api/Sales
+    // GET: api/Sales?page=1&pageSize=20
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var sales = await _saleService.GetAllAsync();
-        return Ok(sales);
+        var result = await _saleService.GetPagedAsync(page, pageSize);
+        return Ok(result);
     }
 
     // GET: api/Sales/{id}

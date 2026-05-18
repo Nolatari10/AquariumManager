@@ -10,7 +10,7 @@ public interface IInventoryLotService
     Task<InventoryLot?> GetLotEntityByIdAsync(int id);
     Task<IReadOnlyList<InventoryLotDto>> GetBySpeciesAsync(int speciesId);
     Task RegisterMortalityAsync(RegisterMortalityDto dto);
-
     Task<BiologicalStockDto?> GetBiologicalStockDtoBySpeciesAsync(int speciesId);
     Task<IReadOnlyList<InventoryLotDto>> GetAllAsync();
+    Task<PagedResult<InventoryLotDto>> GetPagedAsync(int page, int pageSize);
 }

@@ -9,4 +9,5 @@ public interface ISaleService
     Task<SaleDto?> GetByIdAsync(int id);
     Task<IReadOnlyList<SaleDto>> GetAllAsync();
     Task<IReadOnlyList<SaleDto>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<PagedResult<SaleDto>> GetPagedAsync(int page, int pageSize);
 }
