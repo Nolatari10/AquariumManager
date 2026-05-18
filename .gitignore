@@ -1,0 +1,41 @@
+# Archivos específicos del usuario
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.dll
+*.json
+# Archivos de log y temporales
+*.log
+*.tmp
+*.bak
+*.pdb
+# Directorios de compilación
+**/bin/
+**/obj/
+
+# Directorio de caché de Visual Studio 2015/2017+
+.vs/
+
+# Paquetes NuGet
+**/packages/*
+!**/packages/build/
+
+# Archivos de lock de .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Herramientas de desarrollo
+_ReSharper*/
+*.DotSettings.user
+*.vspscc
+*.vssscc
+
+# Archivos de base de datos (SQL Server)
+*.mdf
+*.ldf
+
+# Archivos temporales del sistema
+Thumbs.db
+.DS_Store
