@@ -75,6 +75,7 @@ builder.Services.AddDbContext<AquariumDbContext>(options =>
 
 // Repositorios
 builder.Services.AddScoped<ISpeciesRepository, SpeciesRepository>();
+builder.Services.AddScoped<ISpeciesVariantRepository, SpeciesVariantRepository>();
 builder.Services.AddScoped<IInventoryLotRepository, InventoryLotRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISaleRepository, SaleRepository>();
@@ -94,6 +95,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Servicios de aplicación
 builder.Services.AddScoped<ISpeciesService, SpeciesService>();
+builder.Services.AddScoped<ISpeciesVariantService, SpeciesVariantService>();
 builder.Services.AddScoped<IInventoryLotService, InventoryLotService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<ICatalogService, CatalogService>();

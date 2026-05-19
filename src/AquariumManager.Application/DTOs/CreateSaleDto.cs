@@ -1,3 +1,5 @@
+namespace AquariumManager.Application.DTOs;
+
 public record CreateSaleDto
 {
     public DateTime Date { get; set; }

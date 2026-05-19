@@ -10,6 +10,9 @@ public class SaleItem
     public int SpeciesId { get; set; }
     public Species Species { get; set; } = null!;
 
+    public int? SpeciesVariantId { get; set; }
+    public SpeciesVariant? SpeciesVariant { get; set; }
+
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
 }

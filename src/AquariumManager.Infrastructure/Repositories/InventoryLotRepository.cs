@@ -17,32 +17,45 @@ public class InventoryLotRepository : IInventoryLotRepository
     public async Task<InventoryLot?> GetByIdAsync(int id)
     {
         return await _context.InventoryLots
-            .Include(l => l.Species)
+            .Include(l => l.SpeciesVariant)
+                .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
             .Include(l => l.MortalityRecords)
             .FirstOrDefaultAsync(l => l.Id == id);
     }
 
-    public async Task<IReadOnlyList<InventoryLot>> GetBySpeciesAsync(int speciesId)
+    public async Task<IReadOnlyList<InventoryLot>> GetBySpeciesIdAsync(int speciesId)
     {
         return await _context.InventoryLots
-            .Include(l => l.Species)
+            .Include(l => l.SpeciesVariant)
+                .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
             .Include(l => l.MortalityRecords)
-            .Where(l => l.SpeciesId == speciesId)
+            .Where(l => l.SpeciesVariant.SpeciesId == speciesId)
             .OrderByDescending(l => l.ArrivalDate)
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<InventoryLot>> GetOpenLotsBySpeciesAsync(int speciesId)
+    public async Task<IReadOnlyList<InventoryLot>> GetBySpeciesVariantIdAsync(int speciesVariantId)
     {
-        // Importante: GetCurrentStock() es método de dominio; EF no puede traducirlo a SQL,
-        // por eso primero traemos los lotes y luego filtramos en memoria.
-        var lots = await _context.InventoryLots
-            .Include(l => l.Species)
+        return await _context.InventoryLots
+            .Include(l => l.SpeciesVariant)
+                .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
             .Include(l => l.MortalityRecords)
-            .Where(l => l.SpeciesId == speciesId)
+            .Where(l => l.SpeciesVariantId == speciesVariantId)
+            .OrderByDescending(l => l.ArrivalDate)
+            .ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<InventoryLot>> GetOpenLotsBySpeciesVariantIdAsync(int speciesVariantId)
+    {
+        var lots = await _context.InventoryLots
+            .Include(l => l.SpeciesVariant)
+                .ThenInclude(v => v.Species)
+            .Include(l => l.Supplier)
+            .Include(l => l.MortalityRecords)
+            .Where(l => l.SpeciesVariantId == speciesVariantId)
             .OrderBy(l => l.ArrivalDate)
             .ToListAsync();
 
@@ -65,19 +78,20 @@ public class InventoryLotRepository : IInventoryLotRepository
 
     public async Task<IReadOnlyList<InventoryLot>> GetAllAsync()
     {
-     return await _context.InventoryLots
-        .Include(l => l.Species)
-        .Include(l => l.Supplier)
-        .Include(l => l.MortalityRecords)
-        .OrderByDescending(l => l.ArrivalDate)
-        .ToListAsync();
-
-}
+        return await _context.InventoryLots
+            .Include(l => l.SpeciesVariant)
+                .ThenInclude(v => v.Species)
+            .Include(l => l.Supplier)
+            .Include(l => l.MortalityRecords)
+            .OrderByDescending(l => l.ArrivalDate)
+            .ToListAsync();
+    }
 
     public async Task<IReadOnlyList<InventoryLot>> GetPagedAsync(int page, int pageSize)
     {
         return await _context.InventoryLots
-            .Include(l => l.Species)
+            .Include(l => l.SpeciesVariant)
+                .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
             .Include(l => l.MortalityRecords)
             .OrderByDescending(l => l.ArrivalDate)

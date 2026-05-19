@@ -19,6 +19,8 @@ public class SaleRepository : ISaleRepository
         return await _context.Sales
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
+            .Include(s => s.Items)
+                .ThenInclude(si => si.SpeciesVariant)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
@@ -27,6 +29,8 @@ public class SaleRepository : ISaleRepository
         return await _context.Sales
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
+            .Include(s => s.Items)
+                .ThenInclude(si => si.SpeciesVariant)
             .OrderByDescending(s => s.Date)
             .ToListAsync();
     }
@@ -36,6 +40,8 @@ public class SaleRepository : ISaleRepository
         return await _context.Sales
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
+            .Include(s => s.Items)
+                .ThenInclude(si => si.SpeciesVariant)
             .Where(s => s.Date >= startDate && s.Date <= endDate)
             .OrderByDescending(s => s.Date)
             .ToListAsync();
@@ -46,6 +52,8 @@ public class SaleRepository : ISaleRepository
         return await _context.Sales
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
+            .Include(s => s.Items)
+                .ThenInclude(si => si.SpeciesVariant)
             .OrderByDescending(s => s.Date)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

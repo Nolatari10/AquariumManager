@@ -5,8 +5,9 @@ namespace AquariumManager.Domain.Interfaces;
 public interface IInventoryLotRepository
 {
     Task<InventoryLot?> GetByIdAsync(int id);
-    Task<IReadOnlyList<InventoryLot>> GetBySpeciesAsync(int speciesId);
-    Task<IReadOnlyList<InventoryLot>> GetOpenLotsBySpeciesAsync(int speciesId);
+    Task<IReadOnlyList<InventoryLot>> GetBySpeciesIdAsync(int speciesId);
+    Task<IReadOnlyList<InventoryLot>> GetBySpeciesVariantIdAsync(int speciesVariantId);
+    Task<IReadOnlyList<InventoryLot>> GetOpenLotsBySpeciesVariantIdAsync(int speciesVariantId);
     Task AddAsync(InventoryLot lot);
     Task UpdateAsync(InventoryLot lot);
     Task<IReadOnlyList<InventoryLot>> GetAllAsync();

@@ -19,7 +19,7 @@ public class Species
     public string ImageUrl { get;  set; } = string.Empty;
 
     public ICollection<InventoryItem> InventoryItems { get; private set; } = new List<InventoryItem>();
-    public ICollection<InventoryLot> InventoryLots { get; private set; } = new List<InventoryLot>();
+    public ICollection<SpeciesVariant> Variants { get; private set; } = new List<SpeciesVariant>();
 
     private Species() { }
 

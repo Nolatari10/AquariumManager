@@ -30,7 +30,7 @@ public class ReportService : IReportService
 
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
             var openLots = lots.Where(l => l.GetCurrentStock() > 0).ToList();
 
             if (openLots.Count == 0) continue;
@@ -74,7 +74,7 @@ public class ReportService : IReportService
 
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
 
             foreach (var lot in lots)
             {
@@ -174,7 +174,7 @@ public class ReportService : IReportService
 
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
             var openLots = lots.Where(l => l.GetCurrentStock() > 0).ToList();
 
             foreach (var lot in openLots)
@@ -286,7 +286,7 @@ public class ReportService : IReportService
 
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
             foreach (var lot in lots)
             {
                 if (lot.GetCurrentStock() <= 0) continue;

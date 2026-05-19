@@ -18,7 +18,7 @@ public class SpeciesRepository : ISpeciesRepository
     {
         return await _context.Species
             .Include(s => s.InventoryItems) // legacy
-            .Include(s => s.InventoryLots)  // nuevo modelo
+            .Include(s => s.Variants)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 

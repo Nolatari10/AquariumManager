@@ -17,7 +17,6 @@ public class InventoryLotsController : ControllerBase
         _inventoryLotService = inventoryLotService;
     }
 
-    // GET: api/InventoryLots/5
     [HttpGet("{id:int}")]
     public async Task<ActionResult<InventoryLotDto>> GetById(int id)
     {
@@ -28,25 +27,27 @@ public class InventoryLotsController : ControllerBase
         return Ok(lot);
     }
 
-    // GET: api/InventoryLots/by-species/3
     [HttpGet("by-species/{speciesId:int}")]
     public async Task<ActionResult<IEnumerable<InventoryLotDto>>> GetBySpecies(int speciesId)
     {
-        var lots = await _inventoryLotService.GetBySpeciesAsync(speciesId);
+        var lots = await _inventoryLotService.GetBySpeciesIdAsync(speciesId);
         return Ok(lots);
     }
 
-    // POST: api/InventoryLots
+    [HttpGet("by-variant/{speciesVariantId:int}")]
+    public async Task<ActionResult<IEnumerable<InventoryLotDto>>> GetBySpeciesVariant(int speciesVariantId)
+    {
+        var lots = await _inventoryLotService.GetBySpeciesVariantIdAsync(speciesVariantId);
+        return Ok(lots);
+    }
+
     [HttpPost]
     public async Task<ActionResult<InventoryLotDto>> Create(CreateInventoryLotDto dto)
     {
-        
-       
         var created = await _inventoryLotService.CreateLotAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    // POST: api/InventoryLots/register-mortality
     [HttpPost("register-mortality")]
     public async Task<IActionResult> RegisterMortality(RegisterMortalityDto dto)
     {
@@ -54,18 +55,27 @@ public class InventoryLotsController : ControllerBase
         return NoContent();
     }
 
-    // GET: api/InventoryLots/biological-stock/3
-[HttpGet("biological-stock/{speciesId:int}")]
-public async Task<ActionResult<BiologicalStockDto>> GetBiologicalStock(int speciesId)
-{
-    var stock = await _inventoryLotService.GetBiologicalStockDtoBySpeciesAsync(speciesId);
-    if (stock is null)
-        return NotFound();
+    [HttpGet("biological-stock/{speciesId:int}")]
+    public async Task<ActionResult<BiologicalStockDto>> GetBiologicalStock(int speciesId)
+    {
+        var stock = await _inventoryLotService.GetBiologicalStockDtoBySpeciesAsync(speciesId);
+        if (stock is null)
+            return NotFound();
 
-    return Ok(stock);
-}
+        return Ok(stock);
+    }
 
-   [HttpGet]
+    [HttpGet("biological-stock-variant/{speciesVariantId:int}")]
+    public async Task<ActionResult<BiologicalStockDto>> GetBiologicalStockByVariant(int speciesVariantId)
+    {
+        var stock = await _inventoryLotService.GetBiologicalStockDtoBySpeciesVariantIdAsync(speciesVariantId);
+        if (stock is null)
+            return NotFound();
+
+        return Ok(stock);
+    }
+
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<InventoryLotDto>>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -73,6 +83,4 @@ public async Task<ActionResult<BiologicalStockDto>> GetBiologicalStock(int speci
         var result = await _inventoryLotService.GetPagedAsync(page, pageSize);
         return Ok(result);
     }
-
-
 }

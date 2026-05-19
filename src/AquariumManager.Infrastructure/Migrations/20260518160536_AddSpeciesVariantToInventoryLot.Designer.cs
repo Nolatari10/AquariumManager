@@ -4,6 +4,7 @@ using AquariumManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AquariumManager.Infrastructure.Migrations
 {
     [DbContext(typeof(AquariumDbContext))]
-    partial class AquariumDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518160536_AddSpeciesVariantToInventoryLot")]
+    partial class AddSpeciesVariantToInventoryLot
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -579,6 +582,9 @@ namespace AquariumManager.Infrastructure.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SpeciesId")
+                        .HasColumnType("int");
+
                     b.Property<int>("SpeciesVariantId")
                         .HasColumnType("int");
 
@@ -592,6 +598,8 @@ namespace AquariumManager.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SpeciesId");
 
                     b.HasIndex("SpeciesVariantId");
 

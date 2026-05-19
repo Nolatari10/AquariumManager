@@ -8,11 +8,13 @@ namespace AquariumManager.Application.Services;
 public class SpeciesService : ISpeciesService
 {
     private readonly ISpeciesRepository _speciesRepository;
+    private readonly ISpeciesVariantRepository _variantRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public SpeciesService(ISpeciesRepository speciesRepository, IUnitOfWork unitOfWork)
+    public SpeciesService(ISpeciesRepository speciesRepository, ISpeciesVariantRepository variantRepository, IUnitOfWork unitOfWork)
     {
         _speciesRepository = speciesRepository;
+        _variantRepository = variantRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -34,6 +36,10 @@ public class SpeciesService : ISpeciesService
         );
 
         await _speciesRepository.AddAsync(species);
+
+        var variantName = string.IsNullOrWhiteSpace(dto.Variety) ? "Standard" : dto.Variety.Trim();
+        var standardVariant = new SpeciesVariant(species.Id, variantName);
+        await _variantRepository.AddAsync(standardVariant);
 
         return MapToDto(species);
     }
@@ -95,12 +101,45 @@ public class SpeciesService : ISpeciesService
 
     public async Task DeleteAsync(int id)
     {
+        var hasLots = await _variantRepository.HasInventoryLotsForSpeciesAsync(id);
+        if (hasLots)
+            throw new InvalidOperationException("Cannot delete this species because one or more variants have linked inventory lots.");
+
         await _speciesRepository.DeleteAsync(id);
+    }
+
+    public async Task<BulkDeleteResultDto> BulkDeleteAsync(List<int> ids)
+    {
+        var result = new BulkDeleteResultDto { Requested = ids.Count };
+        var deletableIds = new List<int>();
+
+        foreach (var id in ids)
+        {
+            var hasLots = await _variantRepository.HasInventoryLotsForSpeciesAsync(id);
+            if (hasLots)
+            {
+                result.Skipped++;
+                result.Errors.Add($"Species Id={id} cannot be deleted because it has linked inventory lots.");
+            }
+            else
+            {
+                deletableIds.Add(id);
+            }
+        }
+
+        if (deletableIds.Count > 0)
+        {
+            await _speciesRepository.DeleteRangeAsync(deletableIds);
+            result.Deleted = deletableIds.Count;
+        }
+
+        return result;
     }
 
     public async Task<BulkImportResultDto> BulkImportAsync(List<CreateSpeciesDto> dtos)
     {
         var result = new BulkImportResultDto { TotalProcessed = dtos.Count };
+        var createdSpecies = new List<(Species species, string variety)>();
 
         foreach (var dto in dtos)
         {
@@ -129,6 +168,7 @@ public class SpeciesService : ISpeciesService
                 );
 
                 _speciesRepository.Track(species);
+                createdSpecies.Add((species, dto.Variety?.Trim() ?? string.Empty));
                 result.Created++;
             }
             catch (Exception ex)
@@ -141,16 +181,15 @@ public class SpeciesService : ISpeciesService
         if (result.Created > 0)
         {
             await _unitOfWork.SaveChangesAsync();
+
+            foreach (var (species, variety) in createdSpecies)
+            {
+                var variantName = string.IsNullOrWhiteSpace(variety) ? "Standard" : variety;
+                var variant = new SpeciesVariant(species.Id, variantName);
+                await _variantRepository.AddAsync(variant);
+            }
         }
 
-        return result;
-    }
-
-    public async Task<BulkDeleteResultDto> BulkDeleteAsync(List<int> ids)
-    {
-        var result = new BulkDeleteResultDto { Requested = ids.Count };
-        await _speciesRepository.DeleteRangeAsync(ids);
-        result.Deleted = ids.Count;
         return result;
     }
 

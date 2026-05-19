@@ -10,51 +10,63 @@ public class SaleService : ISaleService
 {
     private readonly ISaleRepository _saleRepository;
     private readonly ISpeciesRepository _speciesRepository;
+    private readonly ISpeciesVariantRepository _variantRepository;
     private readonly IInventoryLotService _inventoryLotService;
     private readonly IUnitOfWork _unitOfWork;
 
     public SaleService(
         ISaleRepository saleRepository,
         ISpeciesRepository speciesRepository,
+        ISpeciesVariantRepository variantRepository,
         IInventoryLotService inventoryLotService,
         IUnitOfWork unitOfWork)
     {
         _saleRepository = saleRepository;
         _speciesRepository = speciesRepository;
+        _variantRepository = variantRepository;
         _inventoryLotService = inventoryLotService;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<OperationResult<SaleDto>> CreateSaleAsync(CreateSaleDto saleDto)
     {
-        // 1. Validaciones generales
         if (saleDto.Items == null || saleDto.Items.Count == 0)
             return OperationResult<SaleDto>.Fail("La venta debe tener al menos un item.");
 
         foreach (var item in saleDto.Items)
         {
             if (item.SpeciesId <= 0)
-                return OperationResult<SaleDto>.Fail("Cada item debe tener un SpeciesId válido.");
+                return OperationResult<SaleDto>.Fail("Cada item debe tener un SpeciesId valido.");
 
             if (item.Quantity <= 0)
                 return OperationResult<SaleDto>.Fail("La cantidad debe ser mayor que 0.");
 
-            if (item.UnitPrice <= 0)
-                return OperationResult<SaleDto>.Fail("El precio unitario debe ser mayor que 0.");
+            if (item.UnitPrice < 0)
+                return OperationResult<SaleDto>.Fail("El precio unitario debe ser mayor o igual que 0.");
         }
 
-        // 2. Validar que las especies existan
         foreach (var item in saleDto.Items)
         {
             var species = await _speciesRepository.GetByIdAsync(item.SpeciesId);
             if (species is null)
                 return OperationResult<SaleDto>.Fail($"La especie con Id {item.SpeciesId} no existe.");
+
+            if (item.SpeciesVariantId.HasValue)
+            {
+                var variant = await _variantRepository.GetByIdAsync(item.SpeciesVariantId.Value);
+                if (variant is null || variant.SpeciesId != item.SpeciesId)
+                    return OperationResult<SaleDto>.Fail($"La variante con Id {item.SpeciesVariantId} no existe para esta especie.");
+            }
         }
 
-        // 3. Validar stock biológico suficiente por especie
         foreach (var item in saleDto.Items)
         {
-            var stockDto = await _inventoryLotService.GetBiologicalStockDtoBySpeciesAsync(item.SpeciesId);
+            BiologicalStockDto? stockDto;
+            if (item.SpeciesVariantId.HasValue)
+                stockDto = await _inventoryLotService.GetBiologicalStockDtoBySpeciesVariantIdAsync(item.SpeciesVariantId.Value);
+            else
+                stockDto = await _inventoryLotService.GetBiologicalStockDtoBySpeciesAsync(item.SpeciesId);
+
             var available = stockDto?.CurrentBiologicalStock ?? 0;
 
             if (available < item.Quantity)
@@ -65,7 +77,6 @@ public class SaleService : ISaleService
             }
         }
 
-        // 4. Crear y persistir la venta dentro de una transacción
         await _unitOfWork.BeginTransactionAsync();
         try
         {
@@ -77,23 +88,32 @@ public class SaleService : ISaleService
 
             foreach (var itemDto in saleDto.Items)
             {
-                var species = await _speciesRepository.GetByIdAsync(itemDto.SpeciesId)!;
                 var remainingToSell = itemDto.Quantity;
 
-                // Crear SaleItem y descontar stock de los lotes más antiguos primero
                 var saleItem = new SaleItem
                 {
                     SpeciesId = itemDto.SpeciesId,
                     Quantity = itemDto.Quantity,
-                    UnitPrice = itemDto.UnitPrice
+                    UnitPrice = itemDto.UnitPrice,
+                    SpeciesVariantId = itemDto.SpeciesVariantId
                 };
                 sale.Items.Add(saleItem);
 
-                // Descontar stock usando FIFO (lotes más antiguos primero)
-                var openLots = (await _inventoryLotService.GetBySpeciesAsync(itemDto.SpeciesId))
-                    .Where(l => l.CurrentStock > 0)
-                    .OrderBy(l => l.ArrivalDate)
-                    .ToList();
+                List<InventoryLotDto> openLots;
+                if (itemDto.SpeciesVariantId.HasValue)
+                {
+                    openLots = (await _inventoryLotService.GetBySpeciesVariantIdAsync(itemDto.SpeciesVariantId.Value))
+                        .Where(l => l.CurrentStock > 0)
+                        .OrderBy(l => l.ArrivalDate)
+                        .ToList();
+                }
+                else
+                {
+                    openLots = (await _inventoryLotService.GetBySpeciesIdAsync(itemDto.SpeciesId))
+                        .Where(l => l.CurrentStock > 0)
+                        .OrderBy(l => l.ArrivalDate)
+                        .ToList();
+                }
 
                 foreach (var lotDto in openLots)
                 {
@@ -101,7 +121,6 @@ public class SaleService : ISaleService
 
                     var toDeduct = Math.Min(remainingToSell, lotDto.CurrentStock);
 
-                    // Register mortality to deduct stock
                     if (toDeduct > 0)
                     {
                         await _inventoryLotService.RegisterMortalityAsync(
@@ -173,6 +192,8 @@ public class SaleService : ISaleService
             {
                 Id = i.Id,
                 SpeciesId = i.SpeciesId,
+                SpeciesVariantId = i.SpeciesVariantId,
+                VariantName = i.SpeciesVariant?.VariantName ?? string.Empty,
                 SpeciesCommonName = i.Species?.CommonName ?? string.Empty,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice

@@ -27,6 +27,7 @@ public class AquariumDbContext : DbContext
     public DbSet<FertilizerPreset> FertilizerPresets => Set<FertilizerPreset>();
     public DbSet<TankPhoto> TankPhotos => Set<TankPhoto>();
     public DbSet<TargetParameterRange> TargetParameterRanges => Set<TargetParameterRange>();
+    public DbSet<SpeciesVariant> SpeciesVariants => Set<SpeciesVariant>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -73,20 +74,15 @@ public class AquariumDbContext : DbContext
             builder.ToTable("InventoryLots");
             builder.HasKey(l => l.Id);
 
-            builder.HasOne(l => l.Species)
-                   .WithMany(s => s.InventoryLots)
-                   .HasForeignKey(l => l.SpeciesId)
-                   .IsRequired(false)
-                   .OnDelete(DeleteBehavior.SetNull);
+            builder.HasOne(l => l.SpeciesVariant)
+                   .WithMany(v => v.InventoryLots)
+                   .HasForeignKey(l => l.SpeciesVariantId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(l => l.Supplier)
                    .WithMany(s => s.InventoryLots)
                    .HasForeignKey(l => l.SupplierId)
                    .OnDelete(DeleteBehavior.SetNull);
-
-            builder.Property(l => l.SpeciesName)
-                   .IsRequired()
-                   .HasMaxLength(300);
 
             builder.Property(l => l.UnitCost).HasColumnType("decimal(18,2)");
         });
@@ -246,6 +242,29 @@ public class AquariumDbContext : DbContext
                    .WithMany(t => t.TargetParameterRanges)
                    .HasForeignKey(r => r.TankId)
                    .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SpeciesVariant>(builder =>
+        {
+            builder.ToTable("SpeciesVariants");
+            builder.HasKey(v => v.Id);
+
+            builder.HasOne(v => v.Species)
+                   .WithMany(s => s.Variants)
+                   .HasForeignKey(v => v.SpeciesId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Property(v => v.VariantName).IsRequired().HasMaxLength(200);
+
+            builder.HasIndex(v => new { v.SpeciesId, v.VariantName }).IsUnique();
+        });
+
+        modelBuilder.Entity<SaleItem>(builder =>
+        {
+            builder.HasOne(si => si.SpeciesVariant)
+                   .WithMany()
+                   .HasForeignKey(si => si.SpeciesVariantId)
+                   .OnDelete(DeleteBehavior.NoAction);
         });
     }
 }

@@ -71,4 +71,6 @@ public record BulkDeleteResultDto
 {
     public int Requested { get; set; }
     public int Deleted { get; set; }
+    public int Skipped { get; set; }
+    public List<string> Errors { get; set; } = new();
 }

@@ -9,10 +9,20 @@ public record SaleDto
     public List<SaleItemDto> Items { get; set; } = new();
 }
 
+public record CreateSaleItemDto
+{
+    public int SpeciesId { get; set; }
+    public int? SpeciesVariantId { get; set; }
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+}
+
 public record SaleItemDto
 {
     public int Id { get; set; }
     public int SpeciesId { get; set; }
+    public int? SpeciesVariantId { get; set; }
+    public string VariantName { get; set; } = string.Empty;
     public string SpeciesCommonName { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
