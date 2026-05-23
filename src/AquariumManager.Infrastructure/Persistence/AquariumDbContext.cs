@@ -28,6 +28,7 @@ public class AquariumDbContext : DbContext
     public DbSet<TankPhoto> TankPhotos => Set<TankPhoto>();
     public DbSet<TargetParameterRange> TargetParameterRanges => Set<TargetParameterRange>();
     public DbSet<SpeciesVariant> SpeciesVariants => Set<SpeciesVariant>();
+    public DbSet<AlertConfig> AlertConfigs => Set<AlertConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -257,6 +258,23 @@ public class AquariumDbContext : DbContext
             builder.Property(v => v.VariantName).IsRequired().HasMaxLength(200);
 
             builder.HasIndex(v => new { v.SpeciesId, v.VariantName }).IsUnique();
+        });
+
+        modelBuilder.Entity<AlertConfig>(builder =>
+        {
+            builder.ToTable("AlertConfigs");
+            builder.HasKey(a => a.Id);
+            builder.Property(a => a.AlertType).IsRequired().HasMaxLength(100);
+            builder.Property(a => a.ThresholdValue).HasColumnType("decimal(8,2)");
+            builder.HasIndex(a => a.AlertType).IsUnique();
+
+            builder.HasData(new AlertConfig
+            {
+                Id = 1,
+                AlertType = "HighMortalityRate",
+                ThresholdValue = 15m,
+                IsEnabled = true
+            });
         });
 
         modelBuilder.Entity<SaleItem>(builder =>

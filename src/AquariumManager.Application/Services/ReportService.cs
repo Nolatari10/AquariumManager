@@ -329,4 +329,78 @@ public class ReportService : IReportService
 
         return report;
     }
+
+    public async Task<ProfitabilityReportDto> GetProfitabilityReportAsync(DateTime startDate, DateTime endDate)
+    {
+        var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
+        var speciesList = await _speciesRepository.GetAllAsync();
+
+        var revenueBySpecies = new Dictionary<int, (decimal Revenue, int Quantity)>();
+        foreach (var sale in sales)
+        {
+            foreach (var item in sale.Items)
+            {
+                if (!revenueBySpecies.ContainsKey(item.SpeciesId))
+                    revenueBySpecies[item.SpeciesId] = (0, 0);
+
+                var (rev, qty) = revenueBySpecies[item.SpeciesId];
+                revenueBySpecies[item.SpeciesId] = (rev + item.Quantity * item.UnitPrice, qty + item.Quantity);
+            }
+        }
+
+        var costBySpecies = new Dictionary<int, decimal>();
+        foreach (var species in speciesList)
+        {
+            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
+            foreach (var lot in lots)
+            {
+                var soldRecords = lot.MortalityRecords
+                    .Where(r => r.Date >= startDate && r.Date <= endDate
+                             && string.Equals(r.Cause, "Sold", StringComparison.OrdinalIgnoreCase));
+
+                foreach (var record in soldRecords)
+                {
+                    if (!costBySpecies.ContainsKey(species.Id))
+                        costBySpecies[species.Id] = 0;
+
+                    costBySpecies[species.Id] += record.Quantity * lot.UnitCost;
+                }
+            }
+        }
+
+        var report = new ProfitabilityReportDto();
+
+        foreach (var species in speciesList)
+        {
+            if (!revenueBySpecies.ContainsKey(species.Id) && !costBySpecies.ContainsKey(species.Id))
+                continue;
+
+            var (revenue, quantity) = revenueBySpecies.GetValueOrDefault(species.Id);
+            var cost = costBySpecies.GetValueOrDefault(species.Id);
+            var profit = revenue - cost;
+            var marginPercent = revenue > 0 ? Math.Round(profit / revenue * 100, 1) : 0;
+
+            report.BySpecies.Add(new ProfitabilityBySpeciesDto
+            {
+                SpeciesId = species.Id,
+                CommonName = species.CommonName,
+                Category = species.Category,
+                QuantitySold = quantity,
+                Revenue = revenue,
+                Cost = cost,
+                Profit = profit,
+                MarginPercent = marginPercent
+            });
+        }
+
+        report.BySpecies = report.BySpecies.OrderByDescending(s => s.Profit).ToList();
+        report.TotalRevenue = report.BySpecies.Sum(s => s.Revenue);
+        report.TotalCost = report.BySpecies.Sum(s => s.Cost);
+        report.GrossProfit = report.TotalRevenue - report.TotalCost;
+        report.ProfitMarginPercent = report.TotalRevenue > 0
+            ? Math.Round(report.GrossProfit / report.TotalRevenue * 100, 1)
+            : 0;
+
+        return report;
+    }
 }

@@ -15,4 +15,5 @@ public interface IInventoryLotService
     Task<BiologicalStockDto?> GetBiologicalStockDtoBySpeciesVariantIdAsync(int speciesVariantId);
     Task<IReadOnlyList<InventoryLotDto>> GetAllAsync();
     Task<PagedResult<InventoryLotDto>> GetPagedAsync(int page, int pageSize);
+    Task<LotHistoryDto?> GetLotHistoryAsync(int lotId);
 }

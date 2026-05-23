@@ -78,4 +78,17 @@ public class ReportsController : ControllerBase
         var report = await _reportService.GetInventoryTurnoverAsync(speciesId, supplierId);
         return Ok(report);
     }
+
+    // GET: api/Reports/profitability?startDate=X&endDate=Y
+    [HttpGet("profitability")]
+    public async Task<IActionResult> GetProfitabilityReport(
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate)
+    {
+        if (startDate > endDate)
+            return BadRequest("startDate must be before endDate.");
+
+        var report = await _reportService.GetProfitabilityReportAsync(startDate, endDate);
+        return Ok(report);
+    }
 }

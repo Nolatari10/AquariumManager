@@ -89,6 +89,7 @@ builder.Services.AddScoped<IFertilizationLogRepository, FertilizationLogReposito
 builder.Services.AddScoped<ITankPhotoRepository, TankPhotoRepository>();
 builder.Services.AddScoped<IFertilizerPresetRepository, FertilizerPresetRepository>();
 builder.Services.AddScoped<ITargetParameterRangeRepository, TargetParameterRangeRepository>();
+builder.Services.AddScoped<IAlertConfigRepository, AlertConfigRepository>();
 
 // Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -102,6 +103,7 @@ builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAlertService, AlertService>();
 
 // Tank module services
 builder.Services.AddScoped<ITankService, TankService>();

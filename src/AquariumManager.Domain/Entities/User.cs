@@ -15,4 +15,9 @@ public class User
         PasswordHash = passwordHash;
         Role = role;
     }
+
+    public void SetPassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+    }
 }

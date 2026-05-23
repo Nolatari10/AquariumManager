@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AquariumManager.Application.Common;
 using AquariumManager.Application.DTOs;
 using AquariumManager.Domain.Entities;
 using AquariumManager.Domain.Interfaces;
@@ -59,6 +60,56 @@ public class AuthService : IAuthService
 
         var token = GenerateJwtToken(user);
         return new LoginResponse(token, user.Id, user.Email, user.Role);
+    }
+
+    public async Task<OperationResult> ChangePasswordAsync(int userId, ChangePasswordRequest request)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user is null)
+            return OperationResult.Fail("User not found.");
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+            return OperationResult.Fail("Current password is incorrect.");
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
+            return OperationResult.Fail("New password must be at least 6 characters.");
+
+        user.SetPassword(BCrypt.Net.BCrypt.HashPassword(request.NewPassword));
+        await _userRepository.UpdateAsync(user);
+
+        return OperationResult.Ok();
+    }
+
+    public async Task<IReadOnlyList<UserDto>> GetAllUsersAsync()
+    {
+        var users = await _userRepository.GetAllAsync();
+        return users.Select(u => new UserDto
+        {
+            Id = u.Id,
+            Email = u.Email,
+            Role = u.Role
+        }).ToList();
+    }
+
+    public async Task<OperationResult> DeleteUserAsync(int userId, int currentUserId)
+    {
+        if (userId == currentUserId)
+            return OperationResult.Fail("Cannot delete your own account.");
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user is null)
+            return OperationResult.Fail("User not found.");
+
+        if (user.Role == "Owner")
+        {
+            var allUsers = await _userRepository.GetAllAsync();
+            var ownerCount = allUsers.Count(u => u.Role == "Owner");
+            if (ownerCount <= 1)
+                return OperationResult.Fail("Cannot delete the last Owner account.");
+        }
+
+        await _userRepository.DeleteAsync(userId);
+        return OperationResult.Ok();
     }
 
     private string GenerateJwtToken(User user)

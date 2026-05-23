@@ -83,4 +83,14 @@ public class InventoryLotsController : ControllerBase
         var result = await _inventoryLotService.GetPagedAsync(page, pageSize);
         return Ok(result);
     }
+
+    [HttpGet("{id:int}/history")]
+    public async Task<ActionResult<LotHistoryDto>> GetLotHistory(int id)
+    {
+        var history = await _inventoryLotService.GetLotHistoryAsync(id);
+        if (history is null)
+            return NotFound();
+
+        return Ok(history);
+    }
 }

@@ -10,4 +10,5 @@ public interface IReportService
     Task<InventoryValuationDto> GetInventoryValuationAsync();
     Task<SupplierPerformanceReportDto> GetSupplierPerformanceAsync(DateTime? startDate = null, DateTime? endDate = null);
     Task<InventoryTurnoverReportDto> GetInventoryTurnoverAsync(int? speciesId = null, int? supplierId = null);
+    Task<ProfitabilityReportDto> GetProfitabilityReportAsync(DateTime startDate, DateTime endDate);
 }

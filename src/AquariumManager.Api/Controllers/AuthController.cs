@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AquariumManager.Application.DTOs;
 using AquariumManager.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -53,5 +54,20 @@ public class AuthController : ControllerBase
         {
             return Conflict(new { message = ex.Message });
         }
+    }
+
+    [HttpPut("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var result = await _authService.ChangePasswordAsync(userId, request);
+        if (!result.Success)
+            return BadRequest(new { message = result.ErrorMessage });
+
+        return Ok(new { message = "Password changed successfully." });
     }
 }

@@ -146,3 +146,25 @@ public record InventoryTurnoverDto
     public string AgingStatus { get; set; } = string.Empty;
     public decimal CostAtRisk { get; set; }
 }
+
+// Profitability Report
+public record ProfitabilityReportDto
+{
+    public decimal TotalRevenue { get; set; }
+    public decimal TotalCost { get; set; }
+    public decimal GrossProfit { get; set; }
+    public decimal ProfitMarginPercent { get; set; }
+    public List<ProfitabilityBySpeciesDto> BySpecies { get; set; } = new();
+}
+
+public record ProfitabilityBySpeciesDto
+{
+    public int SpeciesId { get; set; }
+    public string CommonName { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public int QuantitySold { get; set; }
+    public decimal Revenue { get; set; }
+    public decimal Cost { get; set; }
+    public decimal Profit { get; set; }
+    public decimal MarginPercent { get; set; }
+}

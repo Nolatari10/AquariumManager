@@ -141,6 +141,59 @@ public class InventoryLotService : IInventoryLotService
         };
     }
 
+    public async Task<LotHistoryDto?> GetLotHistoryAsync(int lotId)
+    {
+        var lot = await _lotRepository.GetByIdAsync(lotId);
+        if (lot is null) return null;
+
+        var speciesName = lot.SpeciesVariant?.Species?.CommonName
+                       ?? lot.SpeciesVariant?.VariantName
+                       ?? string.Empty;
+
+        var events = new List<LotHistoryEventDto>();
+
+        events.Add(new LotHistoryEventDto
+        {
+            Date = lot.ArrivalDate,
+            EventType = "Arrival",
+            Description = $"Lot created — {lot.InitialQuantity} units arrived (DOA: {lot.DeadOnArrival})",
+            Quantity = lot.InitialQuantity,
+            Notes = lot.Notes
+        });
+
+        foreach (var record in lot.MortalityRecords.OrderBy(r => r.Date))
+        {
+            var isSold = string.Equals(record.Cause, "Sold", StringComparison.OrdinalIgnoreCase);
+            events.Add(new LotHistoryEventDto
+            {
+                Date = record.Date,
+                EventType = isSold ? "Sold" : "Mortality",
+                Description = isSold
+                    ? $"{record.Quantity} unit(s) sold"
+                    : $"{record.Quantity} unit(s) lost — {record.Cause ?? "Unknown cause"}",
+                Quantity = record.Quantity,
+                Cause = record.Cause,
+                Notes = record.Notes,
+                RelatedRecordId = record.Id
+            });
+        }
+
+        return new LotHistoryDto
+        {
+            LotId = lot.Id,
+            SpeciesName = speciesName,
+            VariantName = lot.SpeciesVariant?.VariantName,
+            SupplierName = lot.Supplier?.Name,
+            ArrivalDate = lot.ArrivalDate,
+            InitialQuantity = lot.InitialQuantity,
+            DeadOnArrival = lot.DeadOnArrival,
+            CurrentStock = lot.GetCurrentStock(),
+            UnitCost = lot.UnitCost,
+            BatchNumber = lot.BatchNumber,
+            Events = events
+        };
+    }
+
     private static InventoryLotDto MapToDto(InventoryLot lot, SpeciesVariant? variant, Supplier? supplier)
     {
         return new InventoryLotDto
