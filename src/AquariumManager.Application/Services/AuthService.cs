@@ -13,11 +13,13 @@ namespace AquariumManager.Application.Services;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly ITenantRepository _tenantRepository;
     private readonly IConfiguration _configuration;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, ITenantRepository tenantRepository, IConfiguration configuration)
     {
         _userRepository = userRepository;
+        _tenantRepository = tenantRepository;
         _configuration = configuration;
     }
 
@@ -31,7 +33,7 @@ public class AuthService : IAuthService
             return null;
 
         var token = GenerateJwtToken(user);
-        return new LoginResponse(token, user.Id, user.Email, user.Role);
+        return new LoginResponse(token, user.Id, user.Email, user.Role, user.Tenant?.Name ?? string.Empty);
     }
 
     public async Task<LoginResponse> RegisterOwnerAsync(RegisterOwnerRequest request)
@@ -40,31 +42,35 @@ public class AuthService : IAuthService
         if (existing is not null)
             throw new InvalidOperationException("A user with this email already exists.");
 
+        var tenant = new Tenant(request.StoreName);
+        await _tenantRepository.AddAsync(tenant);
+
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        var user = new User(request.Email, passwordHash, "Owner");
+        var user = new User(request.Email, passwordHash, "Owner", tenant.Id);
         await _userRepository.AddAsync(user);
 
         var token = GenerateJwtToken(user);
-        return new LoginResponse(token, user.Id, user.Email, user.Role);
+        return new LoginResponse(token, user.Id, user.Email, user.Role, tenant.Name);
     }
 
-    public async Task<LoginResponse> RegisterEmployeeAsync(RegisterEmployeeRequest request)
+    public async Task<LoginResponse> RegisterEmployeeAsync(RegisterEmployeeRequest request, int tenantId)
     {
         var existing = await _userRepository.GetByEmailAsync(request.Email);
         if (existing is not null)
             throw new InvalidOperationException("A user with this email already exists.");
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        var user = new User(request.Email, passwordHash, "Employee");
+        var user = new User(request.Email, passwordHash, "Employee", tenantId);
         await _userRepository.AddAsync(user);
 
+        var tenant = await _tenantRepository.GetByIdAsync(tenantId);
         var token = GenerateJwtToken(user);
-        return new LoginResponse(token, user.Id, user.Email, user.Role);
+        return new LoginResponse(token, user.Id, user.Email, user.Role, tenant?.Name ?? string.Empty);
     }
 
-    public async Task<OperationResult> ChangePasswordAsync(int userId, ChangePasswordRequest request)
+    public async Task<OperationResult> ChangePasswordAsync(int userId, int tenantId, ChangePasswordRequest request)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(tenantId, userId);
         if (user is null)
             return OperationResult.Fail("User not found.");
 
@@ -80,29 +86,33 @@ public class AuthService : IAuthService
         return OperationResult.Ok();
     }
 
-    public async Task<IReadOnlyList<UserDto>> GetAllUsersAsync()
+    public async Task<IReadOnlyList<UserDto>> GetAllUsersAsync(int tenantId)
     {
-        var users = await _userRepository.GetAllAsync();
+        var users = await _userRepository.GetByTenantAsync(tenantId);
         return users.Select(u => new UserDto
         {
             Id = u.Id,
             Email = u.Email,
-            Role = u.Role
+            Role = u.Role,
+            TenantId = u.TenantId
         }).ToList();
     }
 
-    public async Task<OperationResult> DeleteUserAsync(int userId, int currentUserId)
+    public async Task<OperationResult> DeleteUserAsync(int userId, int currentUserId, int tenantId)
     {
         if (userId == currentUserId)
             return OperationResult.Fail("Cannot delete your own account.");
 
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(tenantId, userId);
         if (user is null)
             return OperationResult.Fail("User not found.");
 
+        if (user.TenantId != tenantId)
+            return OperationResult.Fail("Cannot delete user from another store.");
+
         if (user.Role == "Owner")
         {
-            var allUsers = await _userRepository.GetAllAsync();
+            var allUsers = await _userRepository.GetByTenantAsync(tenantId);
             var ownerCount = allUsers.Count(u => u.Role == "Owner");
             if (ownerCount <= 1)
                 return OperationResult.Fail("Cannot delete the last Owner account.");
@@ -123,6 +133,7 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Role, user.Role),
+            new Claim("tenantId", user.TenantId.ToString()),
         };
 
         var token = new JwtSecurityToken(

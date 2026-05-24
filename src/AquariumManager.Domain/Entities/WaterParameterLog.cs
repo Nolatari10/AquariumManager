@@ -3,6 +3,7 @@ namespace AquariumManager.Domain.Entities;
 public class WaterParameterLog
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
     public int TankId { get; private set; }
     public Tank Tank { get; private set; } = null!;
     public DateTime MeasuredAt { get; private set; }

@@ -14,19 +14,33 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<User?> GetByIdAsync(int id)
+    public async Task<User?> GetByIdAsync(int tenantId, int id)
     {
-        return await _context.Users.FindAsync(id);
+        return await _context.Users
+            .Include(u => u.Tenant)
+            .FirstOrDefaultAsync(u => u.TenantId == tenantId && u.Id == id);
     }
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        return await _context.Users
+            .Include(u => u.Tenant)
+            .FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<IReadOnlyList<User>> GetAllAsync()
     {
         return await _context.Users
+            .Include(u => u.Tenant)
+            .OrderBy(u => u.Id)
+            .ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<User>> GetByTenantAsync(int tenantId)
+    {
+        return await _context.Users
+            .Include(u => u.Tenant)
+            .Where(u => u.TenantId == tenantId)
             .OrderBy(u => u.Id)
             .ToListAsync();
     }

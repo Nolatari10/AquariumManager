@@ -14,48 +14,48 @@ public class InventoryLotRepository : IInventoryLotRepository
         _context = context;
     }
 
-    public async Task<InventoryLot?> GetByIdAsync(int id)
+    public async Task<InventoryLot?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.InventoryLots
             .Include(l => l.SpeciesVariant)
                 .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
             .Include(l => l.MortalityRecords)
-            .FirstOrDefaultAsync(l => l.Id == id);
+            .FirstOrDefaultAsync(l => l.TenantId == tenantId && l.Id == id);
     }
 
-    public async Task<IReadOnlyList<InventoryLot>> GetBySpeciesIdAsync(int speciesId)
+    public async Task<IReadOnlyList<InventoryLot>> GetBySpeciesIdAsync(int tenantId, int speciesId)
     {
         return await _context.InventoryLots
             .Include(l => l.SpeciesVariant)
                 .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
             .Include(l => l.MortalityRecords)
-            .Where(l => l.SpeciesVariant.SpeciesId == speciesId)
+            .Where(l => l.TenantId == tenantId && l.SpeciesVariant.SpeciesId == speciesId)
             .OrderByDescending(l => l.ArrivalDate)
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<InventoryLot>> GetBySpeciesVariantIdAsync(int speciesVariantId)
+    public async Task<IReadOnlyList<InventoryLot>> GetBySpeciesVariantIdAsync(int tenantId, int speciesVariantId)
     {
         return await _context.InventoryLots
             .Include(l => l.SpeciesVariant)
                 .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
             .Include(l => l.MortalityRecords)
-            .Where(l => l.SpeciesVariantId == speciesVariantId)
+            .Where(l => l.TenantId == tenantId && l.SpeciesVariantId == speciesVariantId)
             .OrderByDescending(l => l.ArrivalDate)
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<InventoryLot>> GetOpenLotsBySpeciesVariantIdAsync(int speciesVariantId)
+    public async Task<IReadOnlyList<InventoryLot>> GetOpenLotsBySpeciesVariantIdAsync(int tenantId, int speciesVariantId)
     {
         var lots = await _context.InventoryLots
             .Include(l => l.SpeciesVariant)
                 .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
             .Include(l => l.MortalityRecords)
-            .Where(l => l.SpeciesVariantId == speciesVariantId)
+            .Where(l => l.TenantId == tenantId && l.SpeciesVariantId == speciesVariantId)
             .OrderBy(l => l.ArrivalDate)
             .ToListAsync();
 
@@ -76,9 +76,10 @@ public class InventoryLotRepository : IInventoryLotRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IReadOnlyList<InventoryLot>> GetAllAsync()
+    public async Task<IReadOnlyList<InventoryLot>> GetAllAsync(int tenantId)
     {
         return await _context.InventoryLots
+            .Where(l => l.TenantId == tenantId)
             .Include(l => l.SpeciesVariant)
                 .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
@@ -87,9 +88,10 @@ public class InventoryLotRepository : IInventoryLotRepository
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<InventoryLot>> GetPagedAsync(int page, int pageSize)
+    public async Task<IReadOnlyList<InventoryLot>> GetPagedAsync(int tenantId, int page, int pageSize)
     {
         return await _context.InventoryLots
+            .Where(l => l.TenantId == tenantId)
             .Include(l => l.SpeciesVariant)
                 .ThenInclude(v => v.Species)
             .Include(l => l.Supplier)
@@ -100,8 +102,10 @@ public class InventoryLotRepository : IInventoryLotRepository
             .ToListAsync();
     }
 
-    public async Task<int> GetCountAsync()
+    public async Task<int> GetCountAsync(int tenantId)
     {
-        return await _context.InventoryLots.CountAsync();
+        return await _context.InventoryLots
+            .Where(l => l.TenantId == tenantId)
+            .CountAsync();
     }
 }

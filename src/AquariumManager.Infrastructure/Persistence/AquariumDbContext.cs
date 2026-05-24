@@ -10,6 +10,8 @@ public class AquariumDbContext : DbContext
     {
     }
 
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+
     public DbSet<Species> Species => Set<Species>();
     public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
     public DbSet<InventoryLot> InventoryLots => Set<InventoryLot>();
@@ -34,32 +36,40 @@ public class AquariumDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Tenant>(builder =>
+        {
+            builder.ToTable("Tenants");
+            builder.HasKey(t => t.Id);
+            builder.Property(t => t.Name).IsRequired().HasMaxLength(200);
+            builder.Property(t => t.ContactInfo).HasMaxLength(500);
+
+            builder.HasMany(t => t.Users)
+                   .WithOne(u => u.Tenant)
+                   .HasForeignKey(u => u.TenantId)
+                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<Species>(builder =>
         {
             builder.ToTable("Species");
             builder.HasKey(s => s.Id);
+            builder.Property(s => s.TenantId).IsRequired();
             builder.Property(s => s.CommonName).IsRequired().HasMaxLength(200);
             builder.Property(s => s.ScientificName).HasMaxLength(200);
             builder.Property(s => s.Type).HasMaxLength(100);
             builder.Property(s => s.Variety).HasMaxLength(100);
             builder.Property(s => s.Category).HasMaxLength(100);
-              builder.Property(s => s.MinPH)
-              .HasPrecision(3, 2);
-
-        builder.Property(s => s.MaxPH)
-              .HasPrecision(3, 2);
-
-        builder.Property(s => s.MinTemperature)
-              .HasPrecision(4, 1); // ej. 0.0 a 99.9
-
-        builder.Property(s => s.MaxTemperature)
-              .HasPrecision(4, 1);
+            builder.Property(s => s.MinPH).HasPrecision(3, 2);
+            builder.Property(s => s.MaxPH).HasPrecision(3, 2);
+            builder.Property(s => s.MinTemperature).HasPrecision(4, 1);
+            builder.Property(s => s.MaxTemperature).HasPrecision(4, 1);
         });
 
         modelBuilder.Entity<InventoryItem>(builder =>
         {
             builder.ToTable("InventoryItems");
             builder.HasKey(i => i.Id);
+            builder.Property(i => i.TenantId).IsRequired();
 
             builder.HasOne(i => i.Species)
                    .WithMany(s => s.InventoryItems)
@@ -74,6 +84,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("InventoryLots");
             builder.HasKey(l => l.Id);
+            builder.Property(l => l.TenantId).IsRequired();
 
             builder.HasOne(l => l.SpeciesVariant)
                    .WithMany(v => v.InventoryLots)
@@ -92,6 +103,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("MortalityRecords");
             builder.HasKey(m => m.Id);
+            builder.Property(m => m.TenantId).IsRequired();
 
             builder.HasOne(m => m.InventoryLot)
                    .WithMany(l => l.MortalityRecords)
@@ -103,6 +115,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("Suppliers");
             builder.HasKey(s => s.Id);
+            builder.Property(s => s.TenantId).IsRequired();
             builder.Property(s => s.Name).IsRequired().HasMaxLength(200);
         });
 
@@ -114,12 +127,14 @@ public class AquariumDbContext : DbContext
             builder.Property(u => u.Email).IsRequired().HasMaxLength(200);
             builder.Property(u => u.PasswordHash).IsRequired();
             builder.Property(u => u.Role).IsRequired().HasMaxLength(50);
+            builder.Property(u => u.TenantId).IsRequired();
         });
 
         modelBuilder.Entity<Tank>(builder =>
         {
             builder.ToTable("Tanks");
             builder.HasKey(t => t.Id);
+            builder.Property(t => t.TenantId).IsRequired();
             builder.Property(t => t.Name).IsRequired().HasMaxLength(100);
             builder.Property(t => t.SizeLiters).HasColumnType("decimal(8,1)");
             builder.Property(t => t.TankType).HasConversion<string>().HasMaxLength(50);
@@ -138,6 +153,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("WaterParameterLogs");
             builder.HasKey(w => w.Id);
+            builder.Property(w => w.TenantId).IsRequired();
             builder.Property(w => w.pH).HasColumnType("decimal(4,2)");
             builder.Property(w => w.TemperatureCelsius).HasColumnType("decimal(4,1)");
             builder.Property(w => w.AmmoniaPpm).HasColumnType("decimal(6,3)");
@@ -162,6 +178,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("MaintenanceLogs");
             builder.HasKey(m => m.Id);
+            builder.Property(m => m.TenantId).IsRequired();
             builder.Property(m => m.MaintenanceType).HasConversion<string>().HasMaxLength(50);
             builder.Property(m => m.WaterChangeLiters).HasColumnType("decimal(8,2)");
             builder.Property(m => m.Notes).HasMaxLength(500);
@@ -176,6 +193,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("FertilizationLogs");
             builder.HasKey(f => f.Id);
+            builder.Property(f => f.TenantId).IsRequired();
             builder.Property(f => f.DoseAmount).HasColumnType("decimal(8,2)");
             builder.Property(f => f.DoseUnit).HasConversion<string>().HasMaxLength(10);
             builder.Property(f => f.FertilizerType).HasConversion<string>().HasMaxLength(50);
@@ -200,6 +218,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("FertilizerPresets");
             builder.HasKey(p => p.Id);
+            builder.Property(p => p.TenantId).IsRequired();
             builder.Property(p => p.Name).IsRequired().HasMaxLength(100);
             builder.Property(p => p.FertilizerType).HasConversion<string>().HasMaxLength(50);
             builder.Property(p => p.DefaultDoseAmount).HasColumnType("decimal(8,2)");
@@ -220,6 +239,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("TankPhotos");
             builder.HasKey(p => p.Id);
+            builder.Property(p => p.TenantId).IsRequired();
             builder.Property(p => p.ImageUrl).IsRequired().HasMaxLength(500);
             builder.Property(p => p.Caption).HasMaxLength(300);
             builder.Property(p => p.LinkedLogType).HasConversion<string>().HasMaxLength(20);
@@ -234,6 +254,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("TargetParameterRanges");
             builder.HasKey(r => r.Id);
+            builder.Property(r => r.TenantId).IsRequired();
             builder.Property(r => r.ParameterName).HasConversion<string>().HasMaxLength(30);
             builder.Property(r => r.MinValue).HasColumnType("decimal(8,3)");
             builder.Property(r => r.MaxValue).HasColumnType("decimal(8,3)");
@@ -249,6 +270,7 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("SpeciesVariants");
             builder.HasKey(v => v.Id);
+            builder.Property(v => v.TenantId).IsRequired();
 
             builder.HasOne(v => v.Species)
                    .WithMany(s => s.Variants)
@@ -264,21 +286,35 @@ public class AquariumDbContext : DbContext
         {
             builder.ToTable("AlertConfigs");
             builder.HasKey(a => a.Id);
+            builder.Property(a => a.TenantId).IsRequired();
             builder.Property(a => a.AlertType).IsRequired().HasMaxLength(100);
             builder.Property(a => a.ThresholdValue).HasColumnType("decimal(8,2)");
-            builder.HasIndex(a => a.AlertType).IsUnique();
+            builder.HasIndex(a => new { a.TenantId, a.AlertType }).IsUnique();
+        });
 
-            builder.HasData(new AlertConfig
-            {
-                Id = 1,
-                AlertType = "HighMortalityRate",
-                ThresholdValue = 15m,
-                IsEnabled = true
-            });
+        modelBuilder.Entity<Sale>(builder =>
+        {
+            builder.ToTable("Sales");
+            builder.HasKey(s => s.Id);
+            builder.Property(s => s.TenantId).IsRequired();
+
+            builder.HasMany(s => s.Items)
+                   .WithOne(si => si.Sale)
+                   .HasForeignKey(si => si.SaleId)
+                   .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<SaleItem>(builder =>
         {
+            builder.ToTable("SaleItems");
+            builder.HasKey(si => si.Id);
+            builder.Property(si => si.TenantId).IsRequired();
+
+            builder.HasOne(si => si.Species)
+                   .WithMany()
+                   .HasForeignKey(si => si.SpeciesId)
+                   .OnDelete(DeleteBehavior.NoAction);
+
             builder.HasOne(si => si.SpeciesVariant)
                    .WithMany()
                    .HasForeignKey(si => si.SpeciesVariantId)

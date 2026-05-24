@@ -2,6 +2,7 @@ namespace AquariumManager.Domain.Entities;
 public class Sale
 {
     public int Id { get; set; }
+    public int TenantId { get; set; }
     public DateTime Date { get; set; }
     public string CustomerName { get; set; } = string.Empty;
 

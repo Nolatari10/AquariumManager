@@ -4,9 +4,10 @@ namespace AquariumManager.Domain.Interfaces;
 
 public interface IUserRepository
 {
-    Task<User?> GetByIdAsync(int id);
+    Task<User?> GetByIdAsync(int tenantId, int id);
     Task<User?> GetByEmailAsync(string email);
     Task<IReadOnlyList<User>> GetAllAsync();
+    Task<IReadOnlyList<User>> GetByTenantAsync(int tenantId);
     Task<User> AddAsync(User user);
     Task UpdateAsync(User user);
     Task DeleteAsync(int id);

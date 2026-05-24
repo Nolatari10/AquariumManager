@@ -14,9 +14,10 @@ public class WaterParameterLogRepository : IWaterParameterLogRepository
         _context = context;
     }
 
-    public async Task<WaterParameterLog?> GetByIdAsync(int id)
+    public async Task<WaterParameterLog?> GetByIdAsync(int tenantId, int id)
     {
-        return await _context.WaterParameterLogs.FindAsync(id);
+        return await _context.WaterParameterLogs
+            .FirstOrDefaultAsync(w => w.TenantId == tenantId && w.Id == id);
     }
 
     public async Task<IReadOnlyList<WaterParameterLog>> GetByTankAsync(int tankId, DateTime? from = null, DateTime? to = null, int page = 1, int pageSize = 50)

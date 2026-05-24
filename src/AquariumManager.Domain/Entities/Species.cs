@@ -3,6 +3,7 @@ namespace AquariumManager.Domain.Entities;
 public class Species
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
 
     public string CommonName { get; private set; } = string.Empty;
     public string ScientificName { get; private set; } = string.Empty;

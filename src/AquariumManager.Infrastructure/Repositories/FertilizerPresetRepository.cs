@@ -14,14 +14,15 @@ public class FertilizerPresetRepository : IFertilizerPresetRepository
         _context = context;
     }
 
-    public async Task<FertilizerPreset?> GetByIdAsync(int id)
+    public async Task<FertilizerPreset?> GetByIdAsync(int tenantId, int id)
     {
-        return await _context.FertilizerPresets.FindAsync(id);
+        return await _context.FertilizerPresets
+            .FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == id);
     }
 
-    public async Task<IReadOnlyList<FertilizerPreset>> GetAllAsync(int? ownerUserId = null)
+    public async Task<IReadOnlyList<FertilizerPreset>> GetAllAsync(int tenantId, int? ownerUserId = null)
     {
-        var query = _context.FertilizerPresets.Where(p => p.IsActive).AsQueryable();
+        var query = _context.FertilizerPresets.Where(p => p.IsActive && p.TenantId == tenantId).AsQueryable();
 
         if (ownerUserId.HasValue)
             query = query.Where(p => p.OwnerUserId == null || p.OwnerUserId == ownerUserId.Value);

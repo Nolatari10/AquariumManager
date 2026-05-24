@@ -9,22 +9,25 @@ public class AlertService : IAlertService
 {
     private readonly IAlertConfigRepository _configRepository;
     private readonly IInventoryLotRepository _lotRepository;
+    private readonly ICurrentUserService _currentUser;
     private const string HighMortalityAlertType = "HighMortalityRate";
 
     public AlertService(
         IAlertConfigRepository configRepository,
-        IInventoryLotRepository lotRepository)
+        IInventoryLotRepository lotRepository,
+        ICurrentUserService currentUser)
     {
         _configRepository = configRepository;
         _lotRepository = lotRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<IReadOnlyList<HighMortalityAlertDto>> GetActiveHighMortalityAlertsAsync()
     {
-        var config = await _configRepository.GetByAlertTypeAsync(HighMortalityAlertType);
+        var config = await _configRepository.GetByAlertTypeAsync(_currentUser.TenantId, HighMortalityAlertType);
         var threshold = config is { IsEnabled: true } ? config.ThresholdValue : 15m;
 
-        var lots = await _lotRepository.GetAllAsync();
+        var lots = await _lotRepository.GetAllAsync(_currentUser.TenantId);
         var alerts = new List<HighMortalityAlertDto>();
         var today = DateTime.UtcNow;
 
@@ -77,21 +80,24 @@ public class AlertService : IAlertService
 
     public async Task<IReadOnlyList<AlertConfigDto>> GetAllConfigsAsync()
     {
-        var configs = await _configRepository.GetAllAsync();
+        var configs = await _configRepository.GetAllAsync(_currentUser.TenantId);
         return configs.Select(MapToDto).ToList();
     }
 
     public async Task<AlertConfigDto?> GetConfigByAlertTypeAsync(string alertType)
     {
-        var config = await _configRepository.GetByAlertTypeAsync(alertType);
+        var config = await _configRepository.GetByAlertTypeAsync(_currentUser.TenantId, alertType);
         return config is null ? null : MapToDto(config);
     }
 
     public async Task<OperationResult<AlertConfigDto>> UpdateConfigAsync(int id, UpdateAlertConfigDto dto)
     {
-        var config = await _configRepository.GetByIdAsync(id);
+        var config = await _configRepository.GetByIdAsync(_currentUser.TenantId, id);
         if (config is null)
             return OperationResult<AlertConfigDto>.Fail("Alert config not found.");
+
+        if (config.TenantId != _currentUser.TenantId)
+            return OperationResult<AlertConfigDto>.Fail("Cross-tenant access denied.");
 
         config.ThresholdValue = dto.ThresholdValue;
         config.IsEnabled = dto.IsEnabled;

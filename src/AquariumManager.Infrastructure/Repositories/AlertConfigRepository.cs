@@ -14,22 +14,25 @@ public class AlertConfigRepository : IAlertConfigRepository
         _context = context;
     }
 
-    public async Task<AlertConfig?> GetByAlertTypeAsync(string alertType)
+    public async Task<AlertConfig?> GetByAlertTypeAsync(int tenantId, string alertType)
     {
         return await _context.AlertConfigs
+            .Where(a => a.TenantId == tenantId)
             .FirstOrDefaultAsync(a => a.AlertType == alertType);
     }
 
-    public async Task<IReadOnlyList<AlertConfig>> GetAllAsync()
+    public async Task<IReadOnlyList<AlertConfig>> GetAllAsync(int tenantId)
     {
         return await _context.AlertConfigs
+            .Where(a => a.TenantId == tenantId)
             .OrderBy(a => a.AlertType)
             .ToListAsync();
     }
 
-    public async Task<AlertConfig?> GetByIdAsync(int id)
+    public async Task<AlertConfig?> GetByIdAsync(int tenantId, int id)
     {
-        return await _context.AlertConfigs.FindAsync(id);
+        return await _context.AlertConfigs
+            .FirstOrDefaultAsync(a => a.TenantId == tenantId && a.Id == id);
     }
 
     public async Task UpdateAsync(AlertConfig config)

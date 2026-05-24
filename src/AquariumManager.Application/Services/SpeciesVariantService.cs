@@ -9,24 +9,27 @@ public class SpeciesVariantService : ISpeciesVariantService
 {
     private readonly ISpeciesVariantRepository _variantRepository;
     private readonly ISpeciesRepository _speciesRepository;
+    private readonly ICurrentUserService _currentUser;
 
     public SpeciesVariantService(
         ISpeciesVariantRepository variantRepository,
-        ISpeciesRepository speciesRepository)
+        ISpeciesRepository speciesRepository,
+        ICurrentUserService currentUser)
     {
         _variantRepository = variantRepository;
         _speciesRepository = speciesRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<IReadOnlyList<SpeciesVariantDto>> GetBySpeciesIdAsync(int speciesId)
     {
-        var variants = await _variantRepository.GetBySpeciesIdAsync(speciesId);
+        var variants = await _variantRepository.GetBySpeciesIdAsync(_currentUser.TenantId, speciesId);
         return variants.Select(MapToDto).ToList();
     }
 
     public async Task<SpeciesVariantDto?> GetByIdAsync(int id)
     {
-        var variant = await _variantRepository.GetByIdAsync(id);
+        var variant = await _variantRepository.GetByIdAsync(_currentUser.TenantId, id);
         return variant is null ? null : MapToDto(variant);
     }
 
@@ -35,15 +38,16 @@ public class SpeciesVariantService : ISpeciesVariantService
         if (string.IsNullOrWhiteSpace(dto.VariantName))
             return OperationResult<SpeciesVariantDto>.Fail("Variant name is required.");
 
-        var species = await _speciesRepository.GetByIdAsync(speciesId);
+        var species = await _speciesRepository.GetByIdAsync(_currentUser.TenantId, speciesId);
         if (species is null)
             return OperationResult<SpeciesVariantDto>.Fail("Species not found.");
 
-        var exists = await _variantRepository.ExistsByNameAsync(speciesId, dto.VariantName);
+        var exists = await _variantRepository.ExistsByNameAsync(_currentUser.TenantId, speciesId, dto.VariantName);
         if (exists)
             return OperationResult<SpeciesVariantDto>.Fail("A variant with this name already exists for this species.");
 
         var variant = new SpeciesVariant(speciesId, dto.VariantName, dto.Notes, dto.ImageUrl);
+        variant.TenantId = _currentUser.TenantId;
         await _variantRepository.AddAsync(variant);
 
         return OperationResult<SpeciesVariantDto>.Ok(MapToDto(variant));
@@ -54,11 +58,11 @@ public class SpeciesVariantService : ISpeciesVariantService
         if (string.IsNullOrWhiteSpace(dto.VariantName))
             return OperationResult.Fail("Variant name is required.");
 
-        var variant = await _variantRepository.GetByIdAsync(variantId);
+        var variant = await _variantRepository.GetByIdAsync(_currentUser.TenantId, variantId);
         if (variant is null || variant.SpeciesId != speciesId)
             return OperationResult.Fail("SpeciesVariant not found.");
 
-        var exists = await _variantRepository.ExistsByNameAsync(speciesId, dto.VariantName, variantId);
+        var exists = await _variantRepository.ExistsByNameAsync(_currentUser.TenantId, speciesId, dto.VariantName, variantId);
         if (exists)
             return OperationResult.Fail("A variant with this name already exists for this species.");
 
@@ -70,11 +74,11 @@ public class SpeciesVariantService : ISpeciesVariantService
 
     public async Task<OperationResult> DeleteAsync(int speciesId, int variantId)
     {
-        var variant = await _variantRepository.GetByIdAsync(variantId);
+        var variant = await _variantRepository.GetByIdAsync(_currentUser.TenantId, variantId);
         if (variant is null || variant.SpeciesId != speciesId)
             return OperationResult.Fail("SpeciesVariant not found.");
 
-        var hasLots = await _variantRepository.HasInventoryLotsAsync(variantId);
+        var hasLots = await _variantRepository.HasInventoryLotsAsync(_currentUser.TenantId, variantId);
         if (hasLots)
             return OperationResult.Fail("Cannot delete this variant because it has linked inventory lots.");
 

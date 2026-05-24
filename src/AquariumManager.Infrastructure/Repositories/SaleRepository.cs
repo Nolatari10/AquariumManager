@@ -14,19 +14,20 @@ public class SaleRepository : ISaleRepository
         _context = context;
     }
 
-    public async Task<Sale?> GetByIdAsync(int id)
+    public async Task<Sale?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.Sales
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
             .Include(s => s.Items)
                 .ThenInclude(si => si.SpeciesVariant)
-            .FirstOrDefaultAsync(s => s.Id == id);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Id == id);
     }
 
-    public async Task<IReadOnlyList<Sale>> GetAllAsync()
+    public async Task<IReadOnlyList<Sale>> GetAllAsync(int tenantId)
     {
         return await _context.Sales
+            .Where(s => s.TenantId == tenantId)
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
             .Include(s => s.Items)
@@ -35,9 +36,10 @@ public class SaleRepository : ISaleRepository
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<Sale>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<IReadOnlyList<Sale>> GetByDateRangeAsync(int tenantId, DateTime startDate, DateTime endDate)
     {
         return await _context.Sales
+            .Where(s => s.TenantId == tenantId)
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
             .Include(s => s.Items)
@@ -47,9 +49,10 @@ public class SaleRepository : ISaleRepository
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<Sale>> GetPagedAsync(int page, int pageSize)
+    public async Task<IReadOnlyList<Sale>> GetPagedAsync(int tenantId, int page, int pageSize)
     {
         return await _context.Sales
+            .Where(s => s.TenantId == tenantId)
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
             .Include(s => s.Items)
@@ -60,9 +63,11 @@ public class SaleRepository : ISaleRepository
             .ToListAsync();
     }
 
-    public async Task<int> GetCountAsync()
+    public async Task<int> GetCountAsync(int tenantId)
     {
-        return await _context.Sales.CountAsync();
+        return await _context.Sales
+            .Where(s => s.TenantId == tenantId)
+            .CountAsync();
     }
 
     public async Task AddAsync(Sale sale)
@@ -70,5 +75,5 @@ public class SaleRepository : ISaleRepository
         _context.Sales.Add(sale);
     }
 
-  
+   
 }

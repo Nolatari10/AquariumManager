@@ -14,20 +14,20 @@ public class SpeciesVariantRepository : ISpeciesVariantRepository
         _context = context;
     }
 
-    public async Task<SpeciesVariant?> GetByIdAsync(int id)
+    public async Task<SpeciesVariant?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.SpeciesVariants
             .Include(v => v.Species)
             .Include(v => v.InventoryLots)
-            .FirstOrDefaultAsync(v => v.Id == id);
+            .FirstOrDefaultAsync(v => v.TenantId == tenantId && v.Id == id);
     }
 
-    public async Task<IReadOnlyList<SpeciesVariant>> GetBySpeciesIdAsync(int speciesId)
+    public async Task<IReadOnlyList<SpeciesVariant>> GetBySpeciesIdAsync(int tenantId, int speciesId)
     {
         return await _context.SpeciesVariants
             .Include(v => v.Species)
             .Include(v => v.InventoryLots)
-            .Where(v => v.SpeciesId == speciesId)
+            .Where(v => v.TenantId == tenantId && v.SpeciesId == speciesId)
             .OrderBy(v => v.VariantName)
             .ToListAsync();
     }
@@ -55,10 +55,10 @@ public class SpeciesVariantRepository : ISpeciesVariantRepository
         }
     }
 
-    public async Task<bool> ExistsByNameAsync(int speciesId, string variantName, int? excludeId = null)
+    public async Task<bool> ExistsByNameAsync(int tenantId, int speciesId, string variantName, int? excludeId = null)
     {
         var query = _context.SpeciesVariants
-            .Where(v => v.SpeciesId == speciesId && v.VariantName == variantName);
+            .Where(v => v.TenantId == tenantId && v.SpeciesId == speciesId && v.VariantName == variantName);
 
         if (excludeId.HasValue)
             query = query.Where(v => v.Id != excludeId.Value);
@@ -66,13 +66,13 @@ public class SpeciesVariantRepository : ISpeciesVariantRepository
         return await query.AnyAsync();
     }
 
-    public async Task<bool> HasInventoryLotsAsync(int variantId)
+    public async Task<bool> HasInventoryLotsAsync(int tenantId, int variantId)
     {
-        return await _context.InventoryLots.AnyAsync(l => l.SpeciesVariantId == variantId);
+        return await _context.InventoryLots.AnyAsync(l => l.TenantId == tenantId && l.SpeciesVariantId == variantId);
     }
 
-    public async Task<bool> HasInventoryLotsForSpeciesAsync(int speciesId)
+    public async Task<bool> HasInventoryLotsForSpeciesAsync(int tenantId, int speciesId)
     {
-        return await _context.InventoryLots.AnyAsync(l => l.SpeciesVariant.SpeciesId == speciesId);
+        return await _context.InventoryLots.AnyAsync(l => l.TenantId == tenantId && l.SpeciesVariant.SpeciesId == speciesId);
     }
 }

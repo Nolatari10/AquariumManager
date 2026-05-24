@@ -14,33 +14,37 @@ public class SpeciesRepository : ISpeciesRepository
         _context = context;
     }
 
-    public async Task<Species?> GetByIdAsync(int id)
+    public async Task<Species?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.Species
             .Include(s => s.InventoryItems) // legacy
             .Include(s => s.Variants)
-            .FirstOrDefaultAsync(s => s.Id == id);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Id == id);
     }
 
-    public async Task<IReadOnlyList<Species>> GetAllAsync()
+    public async Task<IReadOnlyList<Species>> GetAllAsync(int tenantId)
     {
         return await _context.Species
+            .Where(s => s.TenantId == tenantId)
             .OrderBy(s => s.CommonName)
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<Species>> GetPagedAsync(int page, int pageSize)
+    public async Task<IReadOnlyList<Species>> GetPagedAsync(int tenantId, int page, int pageSize)
     {
         return await _context.Species
+            .Where(s => s.TenantId == tenantId)
             .OrderBy(s => s.CommonName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
     }
 
-    public async Task<int> GetCountAsync()
+    public async Task<int> GetCountAsync(int tenantId)
     {
-        return await _context.Species.CountAsync();
+        return await _context.Species
+            .Where(s => s.TenantId == tenantId)
+            .CountAsync();
     }
 
     public async Task<Species> AddAsync(Species species)

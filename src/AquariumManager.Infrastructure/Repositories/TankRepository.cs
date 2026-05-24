@@ -14,26 +14,29 @@ public class TankRepository : ITankRepository
         _context = context;
     }
 
-    public async Task<Tank?> GetByIdAsync(int id)
+    public async Task<Tank?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.Tanks
             .Include(t => t.OwnerUser)
             .Include(t => t.TargetParameterRanges)
-            .FirstOrDefaultAsync(t => t.Id == id);
+            .FirstOrDefaultAsync(t => t.TenantId == tenantId && t.Id == id);
     }
 
-    public async Task<IReadOnlyList<Tank>> GetByOwnerAsync(int ownerUserId)
+    public async Task<IReadOnlyList<Tank>> GetByOwnerAsync(int tenantId, int ownerUserId)
     {
         return await _context.Tanks
+            .Where(t => t.TenantId == tenantId)
             .Include(t => t.OwnerUser)
             .Where(t => t.OwnerUserId == ownerUserId && t.IsActive)
             .OrderBy(t => t.Name)
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<Tank>> GetAllAsync(int? ownerUserId = null, TankType? tankType = null, bool? isActive = null)
+    public async Task<IReadOnlyList<Tank>> GetAllAsync(int tenantId, int? ownerUserId = null, TankType? tankType = null, bool? isActive = null)
     {
-        var query = _context.Tanks.Include(t => t.OwnerUser).AsQueryable();
+        var query = _context.Tanks
+            .Where(t => t.TenantId == tenantId)
+            .Include(t => t.OwnerUser).AsQueryable();
 
         if (ownerUserId.HasValue)
             query = query.Where(t => t.OwnerUserId == ownerUserId.Value);

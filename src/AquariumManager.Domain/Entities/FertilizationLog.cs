@@ -22,6 +22,7 @@ public enum DoseUnit
 public class FertilizationLog
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
     public int TankId { get; private set; }
     public Tank Tank { get; private set; } = null!;
     public int? FertilizerPresetId { get; private set; }

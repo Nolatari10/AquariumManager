@@ -10,12 +10,14 @@ public class SpeciesService : ISpeciesService
     private readonly ISpeciesRepository _speciesRepository;
     private readonly ISpeciesVariantRepository _variantRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUser;
 
-    public SpeciesService(ISpeciesRepository speciesRepository, ISpeciesVariantRepository variantRepository, IUnitOfWork unitOfWork)
+    public SpeciesService(ISpeciesRepository speciesRepository, ISpeciesVariantRepository variantRepository, IUnitOfWork unitOfWork, ICurrentUserService currentUser)
     {
         _speciesRepository = speciesRepository;
         _variantRepository = variantRepository;
         _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
     }
 
     public async Task<SpeciesDto> CreateAsync(CreateSpeciesDto dto)
@@ -35,10 +37,13 @@ public class SpeciesService : ISpeciesService
             dto.ImageUrl
         );
 
+        species.TenantId = _currentUser.TenantId;
+
         await _speciesRepository.AddAsync(species);
 
         var variantName = string.IsNullOrWhiteSpace(dto.Variety) ? "Standard" : dto.Variety.Trim();
         var standardVariant = new SpeciesVariant(species.Id, variantName);
+        standardVariant.TenantId = _currentUser.TenantId;
         await _variantRepository.AddAsync(standardVariant);
 
         return MapToDto(species);
@@ -46,20 +51,20 @@ public class SpeciesService : ISpeciesService
 
     public async Task<SpeciesDto?> GetByIdAsync(int id)
     {
-        var species = await _speciesRepository.GetByIdAsync(id);
+        var species = await _speciesRepository.GetByIdAsync(_currentUser.TenantId, id);
         return species is null ? null : MapToDto(species);
     }
 
     public async Task<IReadOnlyList<SpeciesDto>> GetAllAsync()
     {
-        var list = await _speciesRepository.GetAllAsync();
+        var list = await _speciesRepository.GetAllAsync(_currentUser.TenantId);
         return list.Select(MapToDto).ToList();
     }
 
     public async Task<PagedResult<SpeciesDto>> GetPagedAsync(int page, int pageSize)
     {
-        var items = await _speciesRepository.GetPagedAsync(page, pageSize);
-        var totalCount = await _speciesRepository.GetCountAsync();
+        var items = await _speciesRepository.GetPagedAsync(_currentUser.TenantId, page, pageSize);
+        var totalCount = await _speciesRepository.GetCountAsync(_currentUser.TenantId);
         return new PagedResult<SpeciesDto>
         {
             Items = items.Select(MapToDto).ToList(),
@@ -77,7 +82,7 @@ public class SpeciesService : ISpeciesService
     if (dto.MinTemperature > dto.MaxTemperature)
         return OperationResult.Fail("MinTemperature no puede ser mayor que MaxTemperature.");
 
-        var species = await _speciesRepository.GetByIdAsync(id)
+        var species = await _speciesRepository.GetByIdAsync(_currentUser.TenantId, id)
                       ?? throw new InvalidOperationException("La especie especificada no existe.");
 
         species.UpdateInfo(
@@ -101,7 +106,7 @@ public class SpeciesService : ISpeciesService
 
     public async Task DeleteAsync(int id)
     {
-        var hasLots = await _variantRepository.HasInventoryLotsForSpeciesAsync(id);
+        var hasLots = await _variantRepository.HasInventoryLotsForSpeciesAsync(_currentUser.TenantId, id);
         if (hasLots)
             throw new InvalidOperationException("Cannot delete this species because one or more variants have linked inventory lots.");
 
@@ -115,7 +120,7 @@ public class SpeciesService : ISpeciesService
 
         foreach (var id in ids)
         {
-            var hasLots = await _variantRepository.HasInventoryLotsForSpeciesAsync(id);
+            var hasLots = await _variantRepository.HasInventoryLotsForSpeciesAsync(_currentUser.TenantId, id);
             if (hasLots)
             {
                 result.Skipped++;
@@ -167,6 +172,8 @@ public class SpeciesService : ISpeciesService
                     dto.ImageUrl?.Trim() ?? string.Empty
                 );
 
+                species.TenantId = _currentUser.TenantId;
+
                 _speciesRepository.Track(species);
                 createdSpecies.Add((species, dto.Variety?.Trim() ?? string.Empty));
                 result.Created++;
@@ -186,6 +193,7 @@ public class SpeciesService : ISpeciesService
             {
                 var variantName = string.IsNullOrWhiteSpace(variety) ? "Standard" : variety;
                 var variant = new SpeciesVariant(species.Id, variantName);
+                variant.TenantId = _currentUser.TenantId;
                 await _variantRepository.AddAsync(variant);
             }
         }

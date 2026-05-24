@@ -15,6 +15,7 @@ public enum TankType
 public class Tank
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
     public int OwnerUserId { get; private set; }
     public User OwnerUser { get; private set; } = null!;
     public string Name { get; private set; } = string.Empty;

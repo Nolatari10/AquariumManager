@@ -13,19 +13,22 @@ public class SaleService : ISaleService
     private readonly ISpeciesVariantRepository _variantRepository;
     private readonly IInventoryLotService _inventoryLotService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUser;
 
     public SaleService(
         ISaleRepository saleRepository,
         ISpeciesRepository speciesRepository,
         ISpeciesVariantRepository variantRepository,
         IInventoryLotService inventoryLotService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser)
     {
         _saleRepository = saleRepository;
         _speciesRepository = speciesRepository;
         _variantRepository = variantRepository;
         _inventoryLotService = inventoryLotService;
         _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
     }
 
     public async Task<OperationResult<SaleDto>> CreateSaleAsync(CreateSaleDto saleDto)
@@ -47,13 +50,13 @@ public class SaleService : ISaleService
 
         foreach (var item in saleDto.Items)
         {
-            var species = await _speciesRepository.GetByIdAsync(item.SpeciesId);
+            var species = await _speciesRepository.GetByIdAsync(_currentUser.TenantId, item.SpeciesId);
             if (species is null)
                 return OperationResult<SaleDto>.Fail($"La especie con Id {item.SpeciesId} no existe.");
 
             if (item.SpeciesVariantId.HasValue)
             {
-                var variant = await _variantRepository.GetByIdAsync(item.SpeciesVariantId.Value);
+                var variant = await _variantRepository.GetByIdAsync(_currentUser.TenantId, item.SpeciesVariantId.Value);
                 if (variant is null || variant.SpeciesId != item.SpeciesId)
                     return OperationResult<SaleDto>.Fail($"La variante con Id {item.SpeciesVariantId} no existe para esta especie.");
             }
@@ -85,6 +88,7 @@ public class SaleService : ISaleService
                 Date = saleDto.Date,
                 CustomerName = saleDto.CustomerName
             };
+            sale.TenantId = _currentUser.TenantId;
 
             foreach (var itemDto in saleDto.Items)
             {
@@ -97,6 +101,7 @@ public class SaleService : ISaleService
                     UnitPrice = itemDto.UnitPrice,
                     SpeciesVariantId = itemDto.SpeciesVariantId
                 };
+                saleItem.TenantId = _currentUser.TenantId;
                 sale.Items.Add(saleItem);
 
                 List<InventoryLotDto> openLots;
@@ -151,26 +156,26 @@ public class SaleService : ISaleService
 
     public async Task<SaleDto?> GetByIdAsync(int id)
     {
-        var sale = await _saleRepository.GetByIdAsync(id);
+        var sale = await _saleRepository.GetByIdAsync(_currentUser.TenantId, id);
         return sale is null ? null : MapToDto(sale);
     }
 
     public async Task<IReadOnlyList<SaleDto>> GetAllAsync()
     {
-        var sales = await _saleRepository.GetAllAsync();
+        var sales = await _saleRepository.GetAllAsync(_currentUser.TenantId);
         return sales.Select(MapToDto).ToList();
     }
 
     public async Task<IReadOnlyList<SaleDto>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
-        var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
+        var sales = await _saleRepository.GetByDateRangeAsync(_currentUser.TenantId, startDate, endDate);
         return sales.Select(MapToDto).ToList();
     }
 
     public async Task<PagedResult<SaleDto>> GetPagedAsync(int page, int pageSize)
     {
-        var sales = await _saleRepository.GetPagedAsync(page, pageSize);
-        var totalCount = await _saleRepository.GetCountAsync();
+        var sales = await _saleRepository.GetPagedAsync(_currentUser.TenantId, page, pageSize);
+        var totalCount = await _saleRepository.GetCountAsync(_currentUser.TenantId);
         return new PagedResult<SaleDto>
         {
             Items = sales.Select(MapToDto).ToList(),

@@ -14,16 +14,17 @@ public class SupplierRepository : ISupplierRepository
         _context = context;
     }
 
-    public async Task<Supplier?> GetByIdAsync(int id)
+    public async Task<Supplier?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.Suppliers
             .Include(s => s.InventoryLots)
-            .FirstOrDefaultAsync(s => s.Id == id);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Id == id);
     }
 
-    public async Task<IReadOnlyList<Supplier>> GetAllAsync()
+    public async Task<IReadOnlyList<Supplier>> GetAllAsync(int tenantId)
     {
         return await _context.Suppliers
+            .Where(s => s.TenantId == tenantId)
             .OrderBy(s => s.Name)
             .ToListAsync();
     }

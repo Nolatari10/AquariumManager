@@ -7,8 +7,8 @@ public interface IAuthService
 {
     Task<LoginResponse?> LoginAsync(LoginRequest request);
     Task<LoginResponse> RegisterOwnerAsync(RegisterOwnerRequest request);
-    Task<LoginResponse> RegisterEmployeeAsync(RegisterEmployeeRequest request);
-    Task<OperationResult> ChangePasswordAsync(int userId, ChangePasswordRequest request);
-    Task<IReadOnlyList<UserDto>> GetAllUsersAsync();
-    Task<OperationResult> DeleteUserAsync(int userId, int currentUserId);
+    Task<LoginResponse> RegisterEmployeeAsync(RegisterEmployeeRequest request, int tenantId);
+    Task<OperationResult> ChangePasswordAsync(int userId, int tenantId, ChangePasswordRequest request);
+    Task<IReadOnlyList<UserDto>> GetAllUsersAsync(int tenantId);
+    Task<OperationResult> DeleteUserAsync(int userId, int currentUserId, int tenantId);
 }

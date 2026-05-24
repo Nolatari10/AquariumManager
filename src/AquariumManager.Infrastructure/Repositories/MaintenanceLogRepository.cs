@@ -14,9 +14,10 @@ public class MaintenanceLogRepository : IMaintenanceLogRepository
         _context = context;
     }
 
-    public async Task<MaintenanceLog?> GetByIdAsync(int id)
+    public async Task<MaintenanceLog?> GetByIdAsync(int tenantId, int id)
     {
-        return await _context.MaintenanceLogs.FindAsync(id);
+        return await _context.MaintenanceLogs
+            .FirstOrDefaultAsync(m => m.TenantId == tenantId && m.Id == id);
     }
 
     public async Task<IReadOnlyList<MaintenanceLog>> GetByTankAsync(int tankId, DateTime? from = null, DateTime? to = null, MaintenanceType? type = null, int page = 1, int pageSize = 50)

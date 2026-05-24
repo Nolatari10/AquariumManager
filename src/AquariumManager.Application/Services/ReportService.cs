@@ -1,3 +1,4 @@
+using AquariumManager.Application.Common;
 using AquariumManager.Application.DTOs;
 using AquariumManager.Domain.Entities;
 using AquariumManager.Domain.Interfaces;
@@ -10,27 +11,30 @@ public class ReportService : IReportService
     private readonly IInventoryLotRepository _lotRepository;
     private readonly ISaleRepository _saleRepository;
     private readonly ISupplierRepository _supplierRepository;
+    private readonly ICurrentUserService _currentUser;
 
     public ReportService(
         ISpeciesRepository speciesRepository,
         IInventoryLotRepository lotRepository,
         ISaleRepository saleRepository,
-        ISupplierRepository supplierRepository)
+        ISupplierRepository supplierRepository,
+        ICurrentUserService currentUser)
     {
         _speciesRepository = speciesRepository;
         _lotRepository = lotRepository;
         _saleRepository = saleRepository;
         _supplierRepository = supplierRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<StockReportDto> GetStockReportAsync()
     {
-        var speciesList = await _speciesRepository.GetAllAsync();
+        var speciesList = await _speciesRepository.GetAllAsync(_currentUser.TenantId);
         var report = new StockReportDto();
 
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(_currentUser.TenantId, species.Id);
             var openLots = lots.Where(l => l.GetCurrentStock() > 0).ToList();
 
             if (openLots.Count == 0) continue;
@@ -67,14 +71,14 @@ public class ReportService : IReportService
     public async Task<MortalityReportDto> GetMortalityReportAsync(DateTime? startDate = null, DateTime? endDate = null, int? speciesId = null, int? supplierId = null)
     {
         var speciesList = speciesId.HasValue
-            ? (await _speciesRepository.GetByIdAsync(speciesId.Value) is { } s ? new[] { s } : Array.Empty<Species>())
-            : await _speciesRepository.GetAllAsync();
+            ? (await _speciesRepository.GetByIdAsync(_currentUser.TenantId, speciesId.Value) is { } s ? new[] { s } : Array.Empty<Species>())
+            : await _speciesRepository.GetAllAsync(_currentUser.TenantId);
 
         var report = new MortalityReportDto();
 
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(_currentUser.TenantId, species.Id);
 
             foreach (var lot in lots)
             {
@@ -127,7 +131,7 @@ public class ReportService : IReportService
         if (page <= 0) page = 1;
         if (pageSize <= 0) pageSize = 50;
 
-        var allSales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
+        var allSales = await _saleRepository.GetByDateRangeAsync(_currentUser.TenantId, startDate, endDate);
         var report = new SalesReportDto();
 
         var salesList = allSales.Select(s => new SalesSummaryDto
@@ -165,7 +169,7 @@ public class ReportService : IReportService
 
     public async Task<InventoryValuationDto> GetInventoryValuationAsync()
     {
-        var speciesList = await _speciesRepository.GetAllAsync();
+        var speciesList = await _speciesRepository.GetAllAsync(_currentUser.TenantId);
         var byCategory = new Dictionary<string, ValuationByCategoryDto>();
 
         int totalUnits = 0;
@@ -174,7 +178,7 @@ public class ReportService : IReportService
 
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(_currentUser.TenantId, species.Id);
             var openLots = lots.Where(l => l.GetCurrentStock() > 0).ToList();
 
             foreach (var lot in openLots)
@@ -217,7 +221,7 @@ public class ReportService : IReportService
 
     public async Task<SupplierPerformanceReportDto> GetSupplierPerformanceAsync(DateTime? startDate = null, DateTime? endDate = null)
     {
-        var suppliers = await _supplierRepository.GetAllAsync();
+        var suppliers = await _supplierRepository.GetAllAsync(_currentUser.TenantId);
         var report = new SupplierPerformanceReportDto();
         var performances = new List<SupplierPerformanceDto>();
 
@@ -278,15 +282,15 @@ public class ReportService : IReportService
     public async Task<InventoryTurnoverReportDto> GetInventoryTurnoverAsync(int? speciesId = null, int? supplierId = null)
     {
         var speciesList = speciesId.HasValue
-            ? (await _speciesRepository.GetByIdAsync(speciesId.Value) is { } s ? new[] { s } : Array.Empty<Species>())
-            : await _speciesRepository.GetAllAsync();
+            ? (await _speciesRepository.GetByIdAsync(_currentUser.TenantId, speciesId.Value) is { } s ? new[] { s } : Array.Empty<Species>())
+            : await _speciesRepository.GetAllAsync(_currentUser.TenantId);
 
         var report = new InventoryTurnoverReportDto();
         var today = DateTime.UtcNow;
 
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(_currentUser.TenantId, species.Id);
             foreach (var lot in lots)
             {
                 if (lot.GetCurrentStock() <= 0) continue;
@@ -332,8 +336,8 @@ public class ReportService : IReportService
 
     public async Task<ProfitabilityReportDto> GetProfitabilityReportAsync(DateTime startDate, DateTime endDate)
     {
-        var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
-        var speciesList = await _speciesRepository.GetAllAsync();
+        var sales = await _saleRepository.GetByDateRangeAsync(_currentUser.TenantId, startDate, endDate);
+        var speciesList = await _speciesRepository.GetAllAsync(_currentUser.TenantId);
 
         var revenueBySpecies = new Dictionary<int, (decimal Revenue, int Quantity)>();
         foreach (var sale in sales)
@@ -351,7 +355,7 @@ public class ReportService : IReportService
         var costBySpecies = new Dictionary<int, decimal>();
         foreach (var species in speciesList)
         {
-            var lots = await _lotRepository.GetBySpeciesIdAsync(species.Id);
+            var lots = await _lotRepository.GetBySpeciesIdAsync(_currentUser.TenantId, species.Id);
             foreach (var lot in lots)
             {
                 var soldRecords = lot.MortalityRecords

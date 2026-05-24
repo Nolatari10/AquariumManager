@@ -14,6 +14,7 @@ public enum MaintenanceType
 public class MaintenanceLog
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
     public int TankId { get; private set; }
     public Tank Tank { get; private set; } = null!;
     public MaintenanceType MaintenanceType { get; private set; }

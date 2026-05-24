@@ -4,9 +4,9 @@ namespace AquariumManager.Domain.Interfaces;
 
 public interface ITankRepository
 {
-    Task<Tank?> GetByIdAsync(int id);
-    Task<IReadOnlyList<Tank>> GetByOwnerAsync(int ownerUserId);
-    Task<IReadOnlyList<Tank>> GetAllAsync(int? ownerUserId = null, TankType? tankType = null, bool? isActive = null);
+    Task<Tank?> GetByIdAsync(int tenantId, int id);
+    Task<IReadOnlyList<Tank>> GetByOwnerAsync(int tenantId, int ownerUserId);
+    Task<IReadOnlyList<Tank>> GetAllAsync(int tenantId, int? ownerUserId = null, TankType? tankType = null, bool? isActive = null);
     Task<Tank> AddAsync(Tank tank);
     Task UpdateAsync(Tank tank);
     Task DeleteAsync(int id);

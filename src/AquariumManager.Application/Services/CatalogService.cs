@@ -1,3 +1,4 @@
+using AquariumManager.Application.Common;
 using AquariumManager.Application.DTOs;
 using AquariumManager.Domain.Interfaces;
 
@@ -8,25 +9,28 @@ public class CatalogService : ICatalogService
     private readonly ISpeciesRepository _speciesRepository;
     private readonly ISpeciesVariantRepository _variantRepository;
     private readonly IInventoryLotService _inventoryLotService;
+    private readonly ICurrentUserService _currentUser;
 
     public CatalogService(
         ISpeciesRepository speciesRepository,
         ISpeciesVariantRepository variantRepository,
-        IInventoryLotService inventoryLotService)
+        IInventoryLotService inventoryLotService,
+        ICurrentUserService currentUser)
     {
         _speciesRepository = speciesRepository;
         _variantRepository = variantRepository;
         _inventoryLotService = inventoryLotService;
+        _currentUser = currentUser;
     }
 
     public async Task<IReadOnlyList<CatalogItemDto>> GetCatalogAsync()
     {
-        var speciesList = await _speciesRepository.GetAllAsync();
+        var speciesList = await _speciesRepository.GetAllAsync(_currentUser.TenantId);
         var result = new List<CatalogItemDto>();
 
         foreach (var species in speciesList)
         {
-            var variants = await _variantRepository.GetBySpeciesIdAsync(species.Id);
+            var variants = await _variantRepository.GetBySpeciesIdAsync(_currentUser.TenantId, species.Id);
 
             foreach (var variant in variants)
             {

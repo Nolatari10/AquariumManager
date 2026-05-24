@@ -1,6 +1,7 @@
 public class Supplier
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
     public string Name { get; private set; } = default!;
     public string? ContactInfo { get; private set; } = default!;
     

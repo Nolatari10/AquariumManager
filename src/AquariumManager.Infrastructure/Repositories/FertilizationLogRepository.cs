@@ -14,11 +14,11 @@ public class FertilizationLogRepository : IFertilizationLogRepository
         _context = context;
     }
 
-    public async Task<FertilizationLog?> GetByIdAsync(int id)
+    public async Task<FertilizationLog?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.FertilizationLogs
             .Include(f => f.FertilizerPreset)
-            .FirstOrDefaultAsync(f => f.Id == id);
+            .FirstOrDefaultAsync(f => f.TenantId == tenantId && f.Id == id);
     }
 
     public async Task<IReadOnlyList<FertilizationLog>> GetByTankAsync(int tankId, DateTime? from = null, DateTime? to = null, FertilizerType? type = null, int page = 1, int pageSize = 50)

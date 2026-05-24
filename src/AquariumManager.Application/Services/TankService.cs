@@ -1,3 +1,4 @@
+using AquariumManager.Application.Common;
 using AquariumManager.Application.DTOs;
 using AquariumManager.Domain.Entities;
 using AquariumManager.Domain.Interfaces;
@@ -15,6 +16,7 @@ public class TankService : ITankService
     private readonly ITankPhotoRepository _photoRepo;
     private readonly ITargetParameterRangeRepository _targetRepo;
     private readonly IFertilizerPresetRepository _presetRepo;
+    private readonly ICurrentUserService _currentUser;
 
     public TankService(
         ITankRepository tankRepo,
@@ -23,7 +25,8 @@ public class TankService : ITankService
         IFertilizationLogRepository fertilizationRepo,
         ITankPhotoRepository photoRepo,
         ITargetParameterRangeRepository targetRepo,
-        IFertilizerPresetRepository presetRepo)
+        IFertilizerPresetRepository presetRepo,
+        ICurrentUserService currentUser)
     {
         _tankRepo = tankRepo;
         _waterRepo = waterRepo;
@@ -32,6 +35,7 @@ public class TankService : ITankService
         _photoRepo = photoRepo;
         _targetRepo = targetRepo;
         _presetRepo = presetRepo;
+        _currentUser = currentUser;
     }
 
     // Creates a tank and returns basic info (no log indicators since it's new)
@@ -42,6 +46,7 @@ public class TankService : ITankService
             dto.Substrate, dto.Co2Injection, dto.LightDescription,
             dto.FilterDescription, dto.HeaterSetpointCelsius);
 
+        tank.TenantId = _currentUser.TenantId;
         await _tankRepo.AddAsync(tank);
         return MapToDto(tank);
     }
@@ -49,7 +54,7 @@ public class TankService : ITankService
     // Returns full tank detail with latest-activity indicators populated
     public async Task<TankDto?> GetByIdAsync(int id)
     {
-        var tank = await _tankRepo.GetByIdAsync(id);
+        var tank = await _tankRepo.GetByIdAsync(_currentUser.TenantId, id);
         if (tank is null) return null;
 
         var dto = MapToDto(tank);
@@ -60,7 +65,7 @@ public class TankService : ITankService
     // Returns list of tanks belonging to a specific owner, each with summary indicators
     public async Task<IReadOnlyList<TankSummaryDto>> GetForOwnerAsync(int ownerUserId)
     {
-        var tanks = await _tankRepo.GetByOwnerAsync(ownerUserId);
+        var tanks = await _tankRepo.GetByOwnerAsync(_currentUser.TenantId, ownerUserId);
         var result = new List<TankSummaryDto>();
         foreach (var tank in tanks)
             result.Add(await BuildSummary(tank));
@@ -74,7 +79,7 @@ public class TankService : ITankService
         if (!string.IsNullOrWhiteSpace(tankType) && Enum.TryParse<Domain.Entities.TankType>(tankType, true, out var parsed))
             typeFilter = parsed;
 
-        var tanks = await _tankRepo.GetAllAsync(ownerUserId, typeFilter, isActive);
+        var tanks = await _tankRepo.GetAllAsync(_currentUser.TenantId, ownerUserId, typeFilter, isActive);
         var result = new List<TankSummaryDto>();
         foreach (var tank in tanks)
             result.Add(await BuildSummary(tank));
@@ -83,7 +88,7 @@ public class TankService : ITankService
 
     public async Task UpdateAsync(int id, UpdateTankDto dto)
     {
-        var tank = await _tankRepo.GetByIdAsync(id)
+        var tank = await _tankRepo.GetByIdAsync(_currentUser.TenantId, id)
             ?? throw new InvalidOperationException("Tank not found.");
 
         tank.UpdateInfo(dto.Name, dto.SizeLiters, dto.TankType, dto.Substrate,

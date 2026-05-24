@@ -47,7 +47,11 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var result = await _authService.RegisterEmployeeAsync(request);
+            var tenantIdClaim = User.FindFirst("tenantId")?.Value;
+            if (tenantIdClaim is null || !int.TryParse(tenantIdClaim, out var tenantId))
+                return Unauthorized();
+
+            var result = await _authService.RegisterEmployeeAsync(request, tenantId);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -64,7 +68,11 @@ public class AuthController : ControllerBase
         if (userIdClaim is null || !int.TryParse(userIdClaim, out var userId))
             return Unauthorized();
 
-        var result = await _authService.ChangePasswordAsync(userId, request);
+        var tenantIdClaim = User.FindFirst("tenantId")?.Value;
+        if (tenantIdClaim is null || !int.TryParse(tenantIdClaim, out var tenantId))
+            return Unauthorized();
+
+        var result = await _authService.ChangePasswordAsync(userId, tenantId, request);
         if (!result.Success)
             return BadRequest(new { message = result.ErrorMessage });
 

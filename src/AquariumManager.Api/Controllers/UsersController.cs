@@ -21,7 +21,11 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _authService.GetAllUsersAsync();
+        var tenantIdClaim = User.FindFirst("tenantId")?.Value;
+        if (tenantIdClaim is null || !int.TryParse(tenantIdClaim, out var tenantId))
+            return Unauthorized();
+
+        var users = await _authService.GetAllUsersAsync(tenantId);
         return Ok(users);
     }
 
@@ -33,7 +37,11 @@ public class UsersController : ControllerBase
         if (userIdClaim is null || !int.TryParse(userIdClaim, out var currentUserId))
             return Unauthorized();
 
-        var result = await _authService.DeleteUserAsync(id, currentUserId);
+        var tenantIdClaim = User.FindFirst("tenantId")?.Value;
+        if (tenantIdClaim is null || !int.TryParse(tenantIdClaim, out var tenantId))
+            return Unauthorized();
+
+        var result = await _authService.DeleteUserAsync(id, currentUserId, tenantId);
         if (!result.Success)
             return BadRequest(new { message = result.ErrorMessage });
 

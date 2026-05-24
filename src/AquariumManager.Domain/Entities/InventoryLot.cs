@@ -3,6 +3,7 @@ using AquariumManager.Domain.Entities;
 public class InventoryLot
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
     public int SpeciesVariantId { get; private set; }
     public SpeciesVariant SpeciesVariant { get; private set; } = null!;
 

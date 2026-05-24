@@ -1,3 +1,4 @@
+using AquariumManager.Application.Common;
 using AquariumManager.Application.DTOs;
 using AquariumManager.Domain.Entities;
 using AquariumManager.Domain.Interfaces;
@@ -9,15 +10,18 @@ public class InventoryLotService : IInventoryLotService
     private readonly IInventoryLotRepository _lotRepository;
     private readonly ISpeciesVariantRepository _variantRepository;
     private readonly ISupplierRepository _supplierRepository;
+    private readonly ICurrentUserService _currentUser;
 
     public InventoryLotService(
         IInventoryLotRepository lotRepository,
         ISpeciesVariantRepository variantRepository,
-        ISupplierRepository supplierRepository)
+        ISupplierRepository supplierRepository,
+        ICurrentUserService currentUser)
     {
         _lotRepository = lotRepository;
         _variantRepository = variantRepository;
         _supplierRepository = supplierRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<InventoryLotDto> CreateLotAsync(CreateInventoryLotDto dto)
@@ -31,13 +35,13 @@ public class InventoryLotService : IInventoryLotService
         if (dto.UnitCost <= 0)
             throw new InvalidOperationException("Costo unitario debe ser mayor a cero.");
 
-        var variant = await _variantRepository.GetByIdAsync(dto.SpeciesVariantId)
+        var variant = await _variantRepository.GetByIdAsync(_currentUser.TenantId, dto.SpeciesVariantId)
                       ?? throw new InvalidOperationException($"La variante {dto.SpeciesVariantId} no fue encontrada.");
 
         Supplier? supplier = null;
         if (dto.SupplierId.HasValue)
         {
-            supplier = await _supplierRepository.GetByIdAsync(dto.SupplierId.Value)
+            supplier = await _supplierRepository.GetByIdAsync(_currentUser.TenantId, dto.SupplierId.Value)
                        ?? throw new InvalidOperationException($"Proveedor {dto.SupplierId.Value} no fue encontrado.");
         }
 
@@ -52,6 +56,8 @@ public class InventoryLotService : IInventoryLotService
             notes: dto.Notes
         );
 
+        lot.TenantId = _currentUser.TenantId;
+
         await _lotRepository.AddAsync(lot);
 
         return MapToDto(lot, variant, supplier);
@@ -59,31 +65,31 @@ public class InventoryLotService : IInventoryLotService
 
     public async Task<InventoryLotDto?> GetByIdAsync(int id)
     {
-        var lot = await _lotRepository.GetByIdAsync(id);
+        var lot = await _lotRepository.GetByIdAsync(_currentUser.TenantId, id);
         if (lot is null) return null;
         return MapToDto(lot, lot.SpeciesVariant, lot.Supplier);
     }
 
     public async Task<InventoryLot?> GetLotEntityByIdAsync(int id)
     {
-        return await _lotRepository.GetByIdAsync(id);
+        return await _lotRepository.GetByIdAsync(_currentUser.TenantId, id);
     }
 
     public async Task<IReadOnlyList<InventoryLotDto>> GetBySpeciesIdAsync(int speciesId)
     {
-        var lots = await _lotRepository.GetBySpeciesIdAsync(speciesId);
+        var lots = await _lotRepository.GetBySpeciesIdAsync(_currentUser.TenantId, speciesId);
         return lots.Select(lot => MapToDto(lot, lot.SpeciesVariant, lot.Supplier)).ToList();
     }
 
     public async Task<IReadOnlyList<InventoryLotDto>> GetBySpeciesVariantIdAsync(int speciesVariantId)
     {
-        var lots = await _lotRepository.GetBySpeciesVariantIdAsync(speciesVariantId);
+        var lots = await _lotRepository.GetBySpeciesVariantIdAsync(_currentUser.TenantId, speciesVariantId);
         return lots.Select(lot => MapToDto(lot, lot.SpeciesVariant, lot.Supplier)).ToList();
     }
 
     public async Task RegisterMortalityAsync(RegisterMortalityDto dto)
     {
-        var lot = await _lotRepository.GetByIdAsync(dto.InventoryLotId)
+        var lot = await _lotRepository.GetByIdAsync(_currentUser.TenantId, dto.InventoryLotId)
                   ?? throw new InvalidOperationException("Inventory lot not found.");
 
         lot.RegisterMortality(dto.Date, dto.Quantity, dto.Cause, dto.Notes);
@@ -92,16 +98,16 @@ public class InventoryLotService : IInventoryLotService
 
     public async Task<BiologicalStockDto?> GetBiologicalStockDtoBySpeciesAsync(int speciesId)
     {
-        var lots = await _lotRepository.GetBySpeciesIdAsync(speciesId);
+        var lots = await _lotRepository.GetBySpeciesIdAsync(_currentUser.TenantId, speciesId);
         return BuildBiologicalStockDto(speciesId, lots);
     }
 
     public async Task<BiologicalStockDto?> GetBiologicalStockDtoBySpeciesVariantIdAsync(int speciesVariantId)
     {
-        var lots = await _lotRepository.GetBySpeciesVariantIdAsync(speciesVariantId);
+        var lots = await _lotRepository.GetBySpeciesVariantIdAsync(_currentUser.TenantId, speciesVariantId);
         if (lots.Count == 0) return null;
 
-        var variant = await _variantRepository.GetByIdAsync(speciesVariantId);
+        var variant = await _variantRepository.GetByIdAsync(_currentUser.TenantId, speciesVariantId);
         var speciesId = variant?.SpeciesId ?? 0;
 
         return BuildBiologicalStockDto(speciesId, lots);
@@ -124,14 +130,14 @@ public class InventoryLotService : IInventoryLotService
 
     public async Task<IReadOnlyList<InventoryLotDto>> GetAllAsync()
     {
-        var lots = await _lotRepository.GetAllAsync();
+        var lots = await _lotRepository.GetAllAsync(_currentUser.TenantId);
         return lots.Select(lot => MapToDto(lot, lot.SpeciesVariant, lot.Supplier)).ToList();
     }
 
     public async Task<PagedResult<InventoryLotDto>> GetPagedAsync(int page, int pageSize)
     {
-        var lots = await _lotRepository.GetPagedAsync(page, pageSize);
-        var totalCount = await _lotRepository.GetCountAsync();
+        var lots = await _lotRepository.GetPagedAsync(_currentUser.TenantId, page, pageSize);
+        var totalCount = await _lotRepository.GetCountAsync(_currentUser.TenantId);
         return new PagedResult<InventoryLotDto>
         {
             Items = lots.Select(lot => MapToDto(lot, lot.SpeciesVariant, lot.Supplier)).ToList(),
@@ -143,7 +149,7 @@ public class InventoryLotService : IInventoryLotService
 
     public async Task<LotHistoryDto?> GetLotHistoryAsync(int lotId)
     {
-        var lot = await _lotRepository.GetByIdAsync(lotId);
+        var lot = await _lotRepository.GetByIdAsync(_currentUser.TenantId, lotId);
         if (lot is null) return null;
 
         var speciesName = lot.SpeciesVariant?.Species?.CommonName

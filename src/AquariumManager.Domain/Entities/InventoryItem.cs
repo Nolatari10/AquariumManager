@@ -3,6 +3,7 @@
 public class InventoryItem
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
 
     public int SpeciesId { get; private set; }
     public Species Species { get; private set; } = null!;

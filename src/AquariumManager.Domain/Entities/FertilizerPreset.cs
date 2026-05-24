@@ -3,9 +3,10 @@ namespace AquariumManager.Domain.Entities;
 public class FertilizerPreset
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
+    public string Name { get; private set; } = string.Empty;
     public int? OwnerUserId { get; private set; }
     public User? OwnerUser { get; private set; }
-    public string Name { get; private set; } = string.Empty;
     public FertilizerType FertilizerType { get; private set; }
     public decimal DefaultDoseAmount { get; private set; }
     public DoseUnit DefaultDoseUnit { get; private set; }

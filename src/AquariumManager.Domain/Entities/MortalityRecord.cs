@@ -1,6 +1,7 @@
 public class MortalityRecord
 {
     public int Id { get; private set; }
+    public int TenantId { get; set; }
     public int InventoryLotId { get; private set; }
     public InventoryLot InventoryLot { get; private set; } = null!;
 

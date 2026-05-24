@@ -14,9 +14,10 @@ public class TankPhotoRepository : ITankPhotoRepository
         _context = context;
     }
 
-    public async Task<TankPhoto?> GetByIdAsync(int id)
+    public async Task<TankPhoto?> GetByIdAsync(int tenantId, int id)
     {
-        return await _context.TankPhotos.FindAsync(id);
+        return await _context.TankPhotos
+            .FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == id);
     }
 
     public async Task<IReadOnlyList<TankPhoto>> GetByTankAsync(int tankId, DateTime? from = null, DateTime? to = null, int page = 1, int pageSize = 20)
