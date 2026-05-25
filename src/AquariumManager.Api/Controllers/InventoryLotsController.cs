@@ -48,6 +48,16 @@ public class InventoryLotsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    [HttpPost("bulk")]
+    public async Task<ActionResult<BulkInventoryLotCreateResponseDto>> CreateBulk(BulkInventoryLotCreateRequestDto request)
+    {
+        var result = await _inventoryLotService.CreateLotsBulkAsync(request);
+        if (!result.Success)
+            return BadRequest(new { ErrorMessage = result.ErrorMessage });
+
+        return Ok(result.Data);
+    }
+
     [HttpPost("register-mortality")]
     public async Task<IActionResult> RegisterMortality(RegisterMortalityDto dto)
     {

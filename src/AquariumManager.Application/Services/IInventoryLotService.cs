@@ -1,3 +1,4 @@
+using AquariumManager.Application.Common;
 using AquariumManager.Application.DTOs;
 using AquariumManager.Domain.Entities;
 
@@ -6,6 +7,7 @@ namespace AquariumManager.Application.Services;
 public interface IInventoryLotService
 {
     Task<InventoryLotDto> CreateLotAsync(CreateInventoryLotDto dto);
+    Task<OperationResult<BulkInventoryLotCreateResponseDto>> CreateLotsBulkAsync(BulkInventoryLotCreateRequestDto request);
     Task<InventoryLotDto?> GetByIdAsync(int id);
     Task<InventoryLot?> GetLotEntityByIdAsync(int id);
     Task<IReadOnlyList<InventoryLotDto>> GetBySpeciesIdAsync(int speciesId);

@@ -11,17 +11,20 @@ public class InventoryLotService : IInventoryLotService
     private readonly ISpeciesVariantRepository _variantRepository;
     private readonly ISupplierRepository _supplierRepository;
     private readonly ICurrentUserService _currentUser;
+    private readonly IUnitOfWork _unitOfWork;
 
     public InventoryLotService(
         IInventoryLotRepository lotRepository,
         ISpeciesVariantRepository variantRepository,
         ISupplierRepository supplierRepository,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        IUnitOfWork unitOfWork)
     {
         _lotRepository = lotRepository;
         _variantRepository = variantRepository;
         _supplierRepository = supplierRepository;
         _currentUser = currentUser;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<InventoryLotDto> CreateLotAsync(CreateInventoryLotDto dto)
@@ -61,6 +64,89 @@ public class InventoryLotService : IInventoryLotService
         await _lotRepository.AddAsync(lot);
 
         return MapToDto(lot, variant, supplier);
+    }
+
+    public async Task<OperationResult<BulkInventoryLotCreateResponseDto>> CreateLotsBulkAsync(BulkInventoryLotCreateRequestDto request)
+    {
+        if (request.Items is null || request.Items.Count == 0)
+            return OperationResult<BulkInventoryLotCreateResponseDto>.Fail("Debe incluir al menos un lote.");
+
+        var errors = new List<string>();
+        var validItems = new List<(BulkInventoryLotCreateItemDto item, SpeciesVariant variant, Supplier? supplier)>();
+
+        for (var i = 0; i < request.Items.Count; i++)
+        {
+            var item = request.Items[i];
+            var rowLabel = $"Fila {i + 1}";
+
+            if (item.InitialQuantity <= 0)
+                errors.Add($"{rowLabel}: Cantidad inicial debe ser mayor a cero.");
+            if (item.DeadOnArrival < 0)
+                errors.Add($"{rowLabel}: Decesos al llegar no debe ser negativa.");
+            if (item.DeadOnArrival > item.InitialQuantity)
+                errors.Add($"{rowLabel}: Decesos al llegar no puede exceder la cantidad inicial.");
+            if (item.UnitCost <= 0)
+                errors.Add($"{rowLabel}: Costo unitario debe ser mayor a cero.");
+
+            var variant = await _variantRepository.GetByIdAsync(_currentUser.TenantId, item.SpeciesVariantId);
+            if (variant is null)
+                errors.Add($"{rowLabel}: La variante {item.SpeciesVariantId} no fue encontrada.");
+
+            Supplier? supplier = null;
+            if (item.SupplierId.HasValue)
+            {
+                supplier = await _supplierRepository.GetByIdAsync(_currentUser.TenantId, item.SupplierId.Value);
+                if (supplier is null)
+                    errors.Add($"{rowLabel}: Proveedor {item.SupplierId.Value} no fue encontrado.");
+            }
+
+            if (variant is not null)
+                validItems.Add((item, variant, supplier));
+        }
+
+        if (errors.Count > 0)
+            return OperationResult<BulkInventoryLotCreateResponseDto>.Fail(string.Join("; ", errors));
+
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            var createdIds = new List<int>();
+            var totalQuantity = 0;
+
+            foreach (var (item, variant, supplier) in validItems)
+            {
+                var lot = new InventoryLot(
+                    speciesVariantId: item.SpeciesVariantId,
+                    arrivalDate: item.ArrivalDate,
+                    initialQuantity: item.InitialQuantity,
+                    deadOnArrival: item.DeadOnArrival,
+                    unitCost: item.UnitCost,
+                    supplierId: item.SupplierId,
+                    batchNumber: item.BatchNumber,
+                    notes: item.Notes
+                );
+                lot.TenantId = _currentUser.TenantId;
+
+                await _lotRepository.AddAsync(lot);
+                createdIds.Add(lot.Id);
+                totalQuantity += item.InitialQuantity;
+            }
+
+            await _unitOfWork.CommitTransactionAsync();
+
+            return OperationResult<BulkInventoryLotCreateResponseDto>.Ok(new BulkInventoryLotCreateResponseDto
+            {
+                CreatedLotIds = createdIds,
+                TotalCreated = createdIds.Count,
+                TotalQuantity = totalQuantity
+            });
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            return OperationResult<BulkInventoryLotCreateResponseDto>.Fail(ex.Message);
+        }
     }
 
     public async Task<InventoryLotDto?> GetByIdAsync(int id)
