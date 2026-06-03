@@ -81,6 +81,20 @@ public class AlertService : IAlertService
     public async Task<IReadOnlyList<AlertConfigDto>> GetAllConfigsAsync()
     {
         var configs = await _configRepository.GetAllAsync(_currentUser.TenantId);
+
+        if (configs.Count == 0)
+        {
+            await _configRepository.AddAsync(new AlertConfig
+            {
+                TenantId = _currentUser.TenantId,
+                AlertType = HighMortalityAlertType,
+                ThresholdValue = 15m,
+                IsEnabled = true
+            });
+
+            configs = await _configRepository.GetAllAsync(_currentUser.TenantId);
+        }
+
         return configs.Select(MapToDto).ToList();
     }
 

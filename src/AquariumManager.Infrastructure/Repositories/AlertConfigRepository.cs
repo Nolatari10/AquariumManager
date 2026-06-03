@@ -40,4 +40,10 @@ public class AlertConfigRepository : IAlertConfigRepository
         _context.AlertConfigs.Update(config);
         await _context.SaveChangesAsync();
     }
+
+    public async Task AddAsync(AlertConfig config)
+    {
+        _context.AlertConfigs.Add(config);
+        await _context.SaveChangesAsync();
+    }
 }
