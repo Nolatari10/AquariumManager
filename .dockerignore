@@ -1,6 +1,8 @@
 **/bin/
 **/obj/
 **/node_modules/
+**/dist/
+**/build/
 .git
 .gitignore
 .vs
@@ -12,3 +14,4 @@ README.md
 *.tmp
 .opencode_bckp
 graphify-out
+PROJECT_CONTEXT.md
