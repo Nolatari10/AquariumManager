@@ -70,6 +70,11 @@ public class InventoryLotRepository : IInventoryLotRepository
         await _context.SaveChangesAsync();
     }
 
+    public void AddRange(IEnumerable<InventoryLot> lots)
+    {
+        _context.InventoryLots.AddRange(lots);
+    }
+
     public async Task UpdateAsync(InventoryLot lot)
     {
         _context.InventoryLots.Update(lot);

@@ -9,6 +9,7 @@ public interface IInventoryLotRepository
     Task<IReadOnlyList<InventoryLot>> GetBySpeciesVariantIdAsync(int tenantId, int speciesVariantId);
     Task<IReadOnlyList<InventoryLot>> GetOpenLotsBySpeciesVariantIdAsync(int tenantId, int speciesVariantId);
     Task AddAsync(InventoryLot lot);
+    void AddRange(IEnumerable<InventoryLot> lots);
     Task UpdateAsync(InventoryLot lot);
     Task<IReadOnlyList<InventoryLot>> GetAllAsync(int tenantId);
     Task<IReadOnlyList<InventoryLot>> GetPagedAsync(int tenantId, int page, int pageSize);

@@ -109,9 +109,7 @@ public class InventoryLotService : IInventoryLotService
 
         try
         {
-            await _unitOfWork.BeginTransactionAsync();
-
-            var createdIds = new List<int>();
+            var lots = new List<InventoryLot>();
             var totalQuantity = 0;
 
             foreach (var (item, variant, supplier) in validItems)
@@ -127,13 +125,16 @@ public class InventoryLotService : IInventoryLotService
                     notes: item.Notes
                 );
                 lot.TenantId = _currentUser.TenantId;
-
-                await _lotRepository.AddAsync(lot);
-                createdIds.Add(lot.Id);
+                lots.Add(lot);
                 totalQuantity += item.InitialQuantity;
             }
 
+            await _unitOfWork.BeginTransactionAsync();
+            _lotRepository.AddRange(lots);
+            await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
+
+            var createdIds = lots.Select(l => l.Id).ToList();
 
             return OperationResult<BulkInventoryLotCreateResponseDto>.Ok(new BulkInventoryLotCreateResponseDto
             {

@@ -290,6 +290,15 @@ public class AquariumDbContext : DbContext
             builder.Property(a => a.AlertType).IsRequired().HasMaxLength(100);
             builder.Property(a => a.ThresholdValue).HasColumnType("decimal(8,2)");
             builder.HasIndex(a => new { a.TenantId, a.AlertType }).IsUnique();
+
+            builder.HasData(new AlertConfig
+            {
+                Id = 1,
+                AlertType = "HighMortalityRate",
+                IsEnabled = true,
+                ThresholdValue = 15m,
+                TenantId = 1
+            });
         });
 
         modelBuilder.Entity<Sale>(builder =>
