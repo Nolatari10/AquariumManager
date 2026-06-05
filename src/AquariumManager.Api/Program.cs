@@ -40,6 +40,7 @@ if (File.Exists(envPath))
         {
             case "DB_CONNECTION":
             case "Db__Connection":
+            case "DB__CONNECTION":
             case "ConnectionStrings__DefaultConnection":
                 builder.Configuration["ConnectionStrings:DefaultConnection"] = value;
                 break;
