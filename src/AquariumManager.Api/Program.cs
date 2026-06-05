@@ -33,22 +33,34 @@ if (File.Exists(envPath))
         var envKey = trimmed[..eq].Trim();
         var value = trimmed[(eq + 1)..].Trim();
 
+        if (string.IsNullOrWhiteSpace(envKey) || string.IsNullOrWhiteSpace(value))
+            continue;
         // Map flat .env keys to structured config sections
         switch (envKey)
         {
             case "DB_CONNECTION":
+            case "Db__Connection":
+            case "ConnectionStrings__DefaultConnection":
                 builder.Configuration["ConnectionStrings:DefaultConnection"] = value;
                 break;
             case "JWT_KEY":
+            case "Jwt__Key":
+            case "JWT__KEY":
                 builder.Configuration["Jwt:Key"] = value;
                 break;
             case "JWT_ISSUER":
+            case "Jwt__Issuer":
+            case "JWT__ISSUER":
                 builder.Configuration["Jwt:Issuer"] = value;
                 break;
             case "JWT_AUDIENCE":
+            case "Jwt__Audience":
+            case "JWT__AUDIENCE":
                 builder.Configuration["Jwt:Audience"] = value;
                 break;
             case "CORS_ORIGIN":
+            case "Cors__Origin":
+            case "CORS__ORIGIN":
                 builder.Configuration["Cors:Origin"] = value;
                 break;
         }
