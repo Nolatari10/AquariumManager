@@ -29,6 +29,16 @@ public class SupplierRepository : ISupplierRepository
             .ToListAsync();
     }
 
+    public async Task<IReadOnlyList<Supplier>> GetAllWithLotsAsync(int tenantId)
+    {
+        return await _context.Suppliers
+            .Where(s => s.TenantId == tenantId)
+            .Include(s => s.InventoryLots)
+                .ThenInclude(l => l.MortalityRecords)
+            .OrderBy(s => s.Name)
+            .ToListAsync();
+    }
+
     public async Task AddAsync(Supplier supplier)
     {
         _context.Suppliers.Add(supplier);

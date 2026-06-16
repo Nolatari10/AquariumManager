@@ -3,6 +3,7 @@ using System;
 using AquariumManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AquariumManager.Infrastructure.Migrations
 {
     [DbContext(typeof(AquariumDbContext))]
-    partial class AquariumDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260611010853_RemoveInventoryItem")]
+    partial class RemoveInventoryItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -656,6 +659,9 @@ namespace AquariumManager.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalMortality")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitCost")

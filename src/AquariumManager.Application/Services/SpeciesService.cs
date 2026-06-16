@@ -22,6 +22,11 @@ public class SpeciesService : ISpeciesService
 
     public async Task<SpeciesDto> CreateAsync(CreateSpeciesDto dto)
     {
+        if (dto.MinPH > dto.MaxPH)
+            throw new ArgumentException("MinPH must not be greater than MaxPH.");
+        if (dto.MinTemperature > dto.MaxTemperature)
+            throw new ArgumentException("MinTemperature must not be greater than MaxTemperature.");
+
         var species = new Species(
             dto.CommonName,
             dto.ScientificName,
@@ -77,13 +82,13 @@ public class SpeciesService : ISpeciesService
     public async  Task<OperationResult> UpdateAsync(int id, UpdateSpeciesDto dto)
     {
          if (dto.MinPH > dto.MaxPH)
-        return OperationResult.Fail("MinPH no puede ser mayor que MaxPH.");
+        return OperationResult.Fail("MinPH must not be greater than MaxPH.");
 
     if (dto.MinTemperature > dto.MaxTemperature)
-        return OperationResult.Fail("MinTemperature no puede ser mayor que MaxTemperature.");
+        return OperationResult.Fail("MinTemperature must not be greater than MaxTemperature.");
 
         var species = await _speciesRepository.GetByIdAsync(_currentUser.TenantId, id)
-                      ?? throw new InvalidOperationException("La especie especificada no existe.");
+                      ?? throw new InvalidOperationException("Species not found.");
 
         species.UpdateInfo(
             dto.CommonName,

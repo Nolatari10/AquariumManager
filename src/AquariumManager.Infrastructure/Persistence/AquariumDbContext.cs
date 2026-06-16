@@ -13,7 +13,6 @@ public class AquariumDbContext : DbContext
     public DbSet<Tenant> Tenants => Set<Tenant>();
 
     public DbSet<Species> Species => Set<Species>();
-    public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
     public DbSet<InventoryLot> InventoryLots => Set<InventoryLot>();
     public DbSet<MortalityRecord> MortalityRecords => Set<MortalityRecord>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
@@ -63,21 +62,6 @@ public class AquariumDbContext : DbContext
             builder.Property(s => s.MaxPH).HasPrecision(3, 2);
             builder.Property(s => s.MinTemperature).HasPrecision(4, 1);
             builder.Property(s => s.MaxTemperature).HasPrecision(4, 1);
-        });
-
-        modelBuilder.Entity<InventoryItem>(builder =>
-        {
-            builder.ToTable("InventoryItems");
-            builder.HasKey(i => i.Id);
-            builder.Property(i => i.TenantId).IsRequired();
-
-            builder.HasOne(i => i.Species)
-                   .WithMany(s => s.InventoryItems)
-                   .HasForeignKey(i => i.SpeciesId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Property(i => i.CostPrice).HasColumnType("decimal(18,2)");
-            builder.Property(i => i.SalePrice).HasColumnType("decimal(18,2)");
         });
 
         modelBuilder.Entity<InventoryLot>(builder =>

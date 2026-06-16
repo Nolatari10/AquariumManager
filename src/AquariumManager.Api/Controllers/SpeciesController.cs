@@ -42,13 +42,10 @@ public class SpeciesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<SpeciesDto>> Create(CreateSpeciesDto dto)
     {
-        if(dto.MinPH <= 0 || dto.MaxPH <= 0)
-            return BadRequest("Los valores de pH deben ser mayores que cero.");
-        
         if(dto.MinPH > dto.MaxPH)
-            return BadRequest("El pH mínimo no puede ser mayor que el pH máximo.");
+            return BadRequest("MinPH must not be greater than MaxPH.");
         if(dto.MinTemperature > dto.MaxTemperature)
-            return BadRequest("La temperatura mínima no puede ser mayor que la temperatura máxima.");
+            return BadRequest("MinTemperature must not be greater than MaxTemperature.");
 
         var created = await _speciesService.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -62,7 +59,7 @@ public class SpeciesController : ControllerBase
 
     if (!result.Success)
     {
-        if (result.ErrorMessage == "La especie especificada no existe.")
+        if (result.ErrorMessage == "Species not found.")
             return NotFound(result.ErrorMessage);
 
         return BadRequest(result.ErrorMessage);

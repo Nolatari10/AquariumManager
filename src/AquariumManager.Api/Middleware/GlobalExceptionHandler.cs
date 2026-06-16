@@ -22,8 +22,36 @@ public class GlobalExceptionHandler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
+            if (IsDatabaseUnavailable(ex))
+            {
+                _logger.LogError(ex, "Database is unavailable or connection was refused");
+            }
+            else
+            {
+                _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
+            }
             await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private static bool IsDatabaseUnavailable(Exception ex)
+    {
+        return WalkExceptions(ex);
+
+        static bool WalkExceptions(Exception? e)
+        {
+            while (e is not null)
+            {
+                var typeName = e.GetType().FullName ?? "";
+                if (typeName.StartsWith("Npgsql.", StringComparison.Ordinal))
+                    return true;
+                if (e is System.Net.Sockets.SocketException)
+                    return true;
+                if (e is InvalidOperationException && e.Message.Contains("transient failure", StringComparison.OrdinalIgnoreCase))
+                    return true;
+                e = e.InnerException;
+            }
+            return false;
         }
     }
 

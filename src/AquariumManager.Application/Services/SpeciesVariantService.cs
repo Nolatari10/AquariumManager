@@ -82,6 +82,10 @@ public class SpeciesVariantService : ISpeciesVariantService
         if (hasLots)
             return OperationResult.Fail("Cannot delete this variant because it has linked inventory lots.");
 
+        var allVariants = await _variantRepository.GetBySpeciesIdAsync(_currentUser.TenantId, speciesId);
+        if (allVariants.Count <= 1)
+            return OperationResult.Fail("Cannot delete the last variant of a species. Every species must have at least one variant.");
+
         await _variantRepository.DeleteAsync(variantId);
         return OperationResult.Ok();
     }

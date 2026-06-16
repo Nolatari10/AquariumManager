@@ -221,7 +221,7 @@ public class ReportService : IReportService
 
     public async Task<SupplierPerformanceReportDto> GetSupplierPerformanceAsync(DateTime? startDate = null, DateTime? endDate = null)
     {
-        var suppliers = await _supplierRepository.GetAllAsync(_currentUser.TenantId);
+        var suppliers = await _supplierRepository.GetAllWithLotsAsync(_currentUser.TenantId);
         var report = new SupplierPerformanceReportDto();
         var performances = new List<SupplierPerformanceDto>();
 

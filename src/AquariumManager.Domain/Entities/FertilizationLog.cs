@@ -57,6 +57,9 @@ public class FertilizationLog
         bool isAdjustment = false,
         string? notes = null)
     {
+        if (doseAmount <= 0)
+            throw new ArgumentException("Dose amount must be greater than zero.", nameof(doseAmount));
+
         TankId = tankId;
         DosedAt = dosedAt;
         DoseAmount = doseAmount;

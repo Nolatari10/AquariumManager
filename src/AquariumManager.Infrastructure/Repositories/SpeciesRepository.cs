@@ -17,7 +17,6 @@ public class SpeciesRepository : ISpeciesRepository
     public async Task<Species?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.Species
-            .Include(s => s.InventoryItems) // legacy
             .Include(s => s.Variants)
             .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Id == id);
     }
