@@ -90,6 +90,12 @@ builder.Services.AddDbContext<AquariumDbContext>(options =>
     options.UseNpgsql(connectionString);
 });
 
+using (var scope = builder.Services.BuildServiceProvider().CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AquariumDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // Repositorios
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<ISpeciesRepository, SpeciesRepository>();
