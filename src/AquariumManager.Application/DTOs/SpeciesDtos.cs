@@ -14,6 +14,8 @@ public record CreateSpeciesDto
     public string Category { get; set; } = string.Empty;
     public string? Notes { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
+    public decimal? RetailPrice { get; set; }
+    public decimal? WholesalePrice { get; set; }
 }
 
 public record UpdateSpeciesDto
@@ -30,6 +32,8 @@ public record UpdateSpeciesDto
     public string Category { get; set; } = string.Empty;
     public string? Notes { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
+    public decimal? RetailPrice { get; set; }
+    public decimal? WholesalePrice { get; set; }
 }
 
 public record SpeciesDto
@@ -47,6 +51,8 @@ public record SpeciesDto
     public string Category { get; set; } = string.Empty;
     public string? Notes { get; set; }
     public string ImageUrl { get;  set; } = string.Empty;
+    public decimal? RetailPrice { get; set; }
+    public decimal? WholesalePrice { get; set; }
 }
 
 public record BulkImportSpeciesDto

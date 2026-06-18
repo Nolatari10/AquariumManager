@@ -17,6 +17,7 @@ public class SaleRepository : ISaleRepository
     public async Task<Sale?> GetByIdAsync(int tenantId, int id)
     {
         return await _context.Sales
+            .Include(s => s.Customer)
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
             .Include(s => s.Items)
@@ -28,6 +29,7 @@ public class SaleRepository : ISaleRepository
     {
         return await _context.Sales
             .Where(s => s.TenantId == tenantId)
+            .Include(s => s.Customer)
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
             .Include(s => s.Items)
@@ -40,6 +42,7 @@ public class SaleRepository : ISaleRepository
     {
         return await _context.Sales
             .Where(s => s.TenantId == tenantId)
+            .Include(s => s.Customer)
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
             .Include(s => s.Items)
@@ -53,6 +56,7 @@ public class SaleRepository : ISaleRepository
     {
         return await _context.Sales
             .Where(s => s.TenantId == tenantId)
+            .Include(s => s.Customer)
             .Include(s => s.Items)
                 .ThenInclude(si => si.Species)
             .Include(s => s.Items)

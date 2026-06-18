@@ -5,6 +5,10 @@ public record SaleDto
     public int Id { get; set; }
     public DateTime Date { get; set; }
     public string CustomerName { get; set; } = string.Empty;
+    public int? CustomerId { get; set; }
+    public string? CustomerType { get; set; }
+    public string SaleType { get; set; } = "Retail";
+    public string? OrderNote { get; set; }
     public decimal TotalAmount { get; set; }
     public List<SaleItemDto> Items { get; set; } = new();
 }

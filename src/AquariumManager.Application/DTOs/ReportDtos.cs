@@ -73,6 +73,7 @@ public record SalesSummaryDto
     public int SaleId { get; set; }
     public DateTime Date { get; set; }
     public string CustomerName { get; set; } = string.Empty;
+    public string SaleType { get; set; } = "Retail";
     public decimal TotalAmount { get; set; }
     public int ItemCount { get; set; }
 }

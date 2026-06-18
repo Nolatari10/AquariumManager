@@ -10,6 +10,8 @@ public record CatalogItemDto
     public string Category { get; set; } = string.Empty;
     public int TotalStock { get; set; }
     public decimal LatestUnitCost { get; set; }
+    public decimal? RetailPrice { get; set; }
+    public decimal? WholesalePrice { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
     public decimal? MinPH { get; set; }
     public decimal? MaxPH { get; set; }

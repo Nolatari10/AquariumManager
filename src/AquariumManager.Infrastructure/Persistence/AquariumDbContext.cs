@@ -30,6 +30,7 @@ public class AquariumDbContext : DbContext
     public DbSet<TargetParameterRange> TargetParameterRanges => Set<TargetParameterRange>();
     public DbSet<SpeciesVariant> SpeciesVariants => Set<SpeciesVariant>();
     public DbSet<AlertConfig> AlertConfigs => Set<AlertConfig>();
+    public DbSet<Customer> Customers => Set<Customer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -62,6 +63,8 @@ public class AquariumDbContext : DbContext
             builder.Property(s => s.MaxPH).HasPrecision(3, 2);
             builder.Property(s => s.MinTemperature).HasPrecision(4, 1);
             builder.Property(s => s.MaxTemperature).HasPrecision(4, 1);
+            builder.Property(s => s.RetailPrice).HasColumnType("decimal(18,2)");
+            builder.Property(s => s.WholesalePrice).HasColumnType("decimal(18,2)");
         });
 
         modelBuilder.Entity<InventoryLot>(builder =>
@@ -290,6 +293,13 @@ public class AquariumDbContext : DbContext
             builder.ToTable("Sales");
             builder.HasKey(s => s.Id);
             builder.Property(s => s.TenantId).IsRequired();
+            builder.Property(s => s.SaleType).HasConversion<string>().HasMaxLength(20);
+            builder.Property(s => s.OrderNote).HasMaxLength(500);
+
+            builder.HasOne(s => s.Customer)
+                   .WithMany(c => c.Sales)
+                   .HasForeignKey(s => s.CustomerId)
+                   .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasMany(s => s.Items)
                    .WithOne(si => si.Sale)
@@ -312,6 +322,19 @@ public class AquariumDbContext : DbContext
                    .WithMany()
                    .HasForeignKey(si => si.SpeciesVariantId)
                    .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<Customer>(builder =>
+        {
+            builder.ToTable("Customers");
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.TenantId).IsRequired();
+            builder.Property(c => c.Name).IsRequired().HasMaxLength(200);
+            builder.Property(c => c.CustomerType).HasConversion<string>().HasMaxLength(20);
+            builder.Property(c => c.ContactName).HasMaxLength(200);
+            builder.Property(c => c.Phone).HasMaxLength(50);
+            builder.Property(c => c.Email).HasMaxLength(200);
+            builder.Property(c => c.Notes).HasMaxLength(500);
         });
     }
 }

@@ -57,6 +57,8 @@ public class CatalogService : ICatalogService
                     Category = species.Category,
                     TotalStock = totalStock,
                     LatestUnitCost = latestLot.UnitCost,
+                    RetailPrice = species.RetailPrice,
+                    WholesalePrice = species.WholesalePrice,
                     ImageUrl = imageUrl,
                     MinPH = species.MinPH,
                     MaxPH = species.MaxPH,

@@ -1,13 +1,18 @@
-# Graph Report - AquariumManager  (2026-05-23)
+# Graph Report - AquariumManager  (2026-06-16)
 
 ## Corpus Check
-- 151 files · ~37,859 words
+- 138 files · ~33,996 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 893 nodes · 946 edges · 138 communities (50 shown, 88 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 51 edges (avg confidence: 0.8)
+- 998 nodes · 1053 edges · 165 communities (54 shown, 111 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 55 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `a5ca396f`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Community 0|Community 0]]
@@ -121,144 +126,162 @@
 - [[_COMMUNITY_Community 108|Community 108]]
 - [[_COMMUNITY_Community 109|Community 109]]
 - [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 111|Community 111]]
+- [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 113|Community 113]]
+- [[_COMMUNITY_Community 114|Community 114]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 117|Community 117]]
+- [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
+- [[_COMMUNITY_Community 120|Community 120]]
+- [[_COMMUNITY_Community 121|Community 121]]
+- [[_COMMUNITY_Community 122|Community 122]]
+- [[_COMMUNITY_Community 123|Community 123]]
+- [[_COMMUNITY_Community 124|Community 124]]
+- [[_COMMUNITY_Community 125|Community 125]]
+- [[_COMMUNITY_Community 126|Community 126]]
+- [[_COMMUNITY_Community 127|Community 127]]
+- [[_COMMUNITY_Community 128|Community 128]]
+- [[_COMMUNITY_Community 129|Community 129]]
+- [[_COMMUNITY_Community 130|Community 130]]
+- [[_COMMUNITY_Community 131|Community 131]]
+- [[_COMMUNITY_Community 132|Community 132]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `TankService` - 36 edges
 2. `TanksController` - 22 edges
-3. `ITankService` - 20 edges
-4. `InventoryLotService` - 19 edges
-5. `AquariumDbContext` - 16 edges
-6. `SpeciesService` - 15 edges
-7. `ReportService` - 14 edges
-8. `SaleService` - 14 edges
-9. `Aquarium Manager - Project Context & Business Rules` - 13 edges
-10. `InventoryLotsController` - 12 edges
+3. `InventoryLotService` - 21 edges
+4. `ITankService` - 20 edges
+5. `AquariumDbContext` - 17 edges
+6. `SaleService` - 15 edges
+7. `SpeciesService` - 15 edges
+8. `ReportService` - 14 edges
+9. `InventoryLotsController` - 13 edges
+10. `InventoryLotRepository` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `TenantRepository` --inherits--> `ITenantRepository`  [EXTRACTED]
+  src/AquariumManager.Infrastructure/Repositories/TenantRepository.cs → src/AquariumManager.Application/Services/AuthService.cs
 - `AlertService` --references--> `ICurrentUserService`  [EXTRACTED]
   src/AquariumManager.Application/Services/AlertService.cs → src/AquariumManager.Application/Services/FertilizerPresetService.cs
 - `TankService` --references--> `ICurrentUserService`  [EXTRACTED]
   src/AquariumManager.Application/Services/TankService.cs → src/AquariumManager.Application/Services/FertilizerPresetService.cs
+- `CustomerService` --references--> `ICurrentUserService`  [EXTRACTED]
+  src/AquariumManager.Application/Services/CustomerService.cs → src/AquariumManager.Application/Services/FertilizerPresetService.cs
 - `ReportService` --references--> `ICurrentUserService`  [EXTRACTED]
   src/AquariumManager.Application/Services/ReportService.cs → src/AquariumManager.Application/Services/FertilizerPresetService.cs
-- `SupplierService` --references--> `ICurrentUserService`  [EXTRACTED]
-  src/AquariumManager.Application/Services/SupplierService.cs → src/AquariumManager.Application/Services/FertilizerPresetService.cs
-- `SpeciesVariantService` --references--> `ICurrentUserService`  [EXTRACTED]
-  src/AquariumManager.Application/Services/SpeciesVariantService.cs → src/AquariumManager.Application/Services/FertilizerPresetService.cs
 
-## Communities (138 total, 88 thin omitted)
+## Communities (165 total, 111 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.05
-Nodes (12): AquariumDbContext, IFertilizationLogRepository, IMaintenanceLogRepository, ITankPhotoRepository, ITargetParameterRangeRepository, IWaterParameterLogRepository, FertilizationLogRepository, MaintenanceLogRepository (+4 more)
+Nodes (15): ICurrentUserService, IDbContextTransaction, IHttpContextAccessor, IInventoryLotService, ISpeciesRepository, ISpeciesService, ISpeciesVariantRepository, IUnitOfWork (+7 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.07
-Nodes (10): ICurrentUserService, IHttpContextAccessor, IInventoryLotService, ISaleRepository, ISpeciesVariantRepository, SaleRepository, CatalogService, CurrentUserService (+2 more)
+Cohesion: 0.08
+Nodes (4): IFertilizationLogRepository, ITankService, FertilizationLogRepository, TankService
 
 ### Community 2 - "Community 2"
 Cohesion: 0.07
-Nodes (4): ITankRepository, ITankService, TankRepository, TankService
+Nodes (6): IAlertConfigRepository, IInventoryLotRepository, AlertConfigRepository, InventoryLotRepository, AlertService, string
 
 ### Community 3 - "Community 3"
-Cohesion: 0.06
-Nodes (8): IAlertConfigRepository, IInventoryLotRepository, IReportService, AlertConfigRepository, InventoryLotRepository, AlertService, ReportService, string
-
-### Community 4 - "Community 4"
-Cohesion: 0.08
-Nodes (5): VariantsController, ISpeciesRepository, ISpeciesVariantService, SpeciesRepository, SpeciesVariantService
-
-### Community 5 - "Community 5"
-Cohesion: 0.09
-Nodes (6): IConfiguration, ITenantRepository, IUserRepository, TenantRepository, UserRepository, AuthService
-
-### Community 6 - "Community 6"
 Cohesion: 0.09
 Nodes (5): SuppliersController, ISupplierRepository, ISupplierService, SupplierRepository, SupplierService
 
-### Community 7 - "Community 7"
+### Community 4 - "Community 4"
 Cohesion: 0.1
 Nodes (5): FertilizerPresetsController, IFertilizerPresetRepository, IFertilizerPresetService, FertilizerPresetRepository, FertilizerPresetService
 
-### Community 10 - "Community 10"
-Cohesion: 0.12
-Nodes (5): IDbContextTransaction, ISpeciesService, IUnitOfWork, SpeciesService, UnitOfWork
+### Community 6 - "Community 6"
+Cohesion: 0.11
+Nodes (5): IConfiguration, ITenantRepository, IUserRepository, UserRepository, AuthService
 
-### Community 11 - "Community 11"
+### Community 8 - "Community 8"
+Cohesion: 0.11
+Nodes (4): IReportService, ISaleRepository, SaleRepository, ReportService
+
+### Community 9 - "Community 9"
+Cohesion: 0.13
+Nodes (4): ICustomerRepository, ICustomerService, CustomerRepository, CustomerService
+
+### Community 10 - "Community 10"
 Cohesion: 0.13
 Nodes (6): ControllerBase, AuthController, CatalogController, UsersController, IAuthService, ICatalogService
 
-### Community 18 - "Community 18"
+### Community 19 - "Community 19"
 Cohesion: 0.2
 Nodes (10): 4.1 Entity Relationships, 4.2 Tables, 4. DATABASE SCHEMA, code:sql (Id (PK, int)), code:sql (Id (PK, int)), code:sql (Id (PK, int)), code:block6 (Species (1) ←──→ (∞) InventoryLot (∞) ←──→ (1) Supplier), code:sql (Id (PK, int)) (+2 more)
 
-### Community 23 - "Community 23"
+### Community 25 - "Community 25"
 Cohesion: 0.22
 Nodes (9): 10.1 Receiving New Inventory, 10.2 Recording Mortality, 10.3 Making a Sale, 10.4 Generating Reports, 10. KEY BUSINESS FLOWS, code:block16 (1. Create Species (if new type)), code:block17 (1. Select InventoryLot), code:block18 (1. Customer selects species and quantities) (+1 more)
 
-### Community 24 - "Community 24"
+### Community 26 - "Community 26"
 Cohesion: 0.22
 Nodes (9): 3.1 Clean Architecture Layers, 3.2 Repository Pattern, 3.3 Unit of Work Pattern, 3.4 DTO Pattern, 3.5 OperationResult Pattern, 3. ARCHITECTURE PATTERNS, code:block3 (┌─────────────────────────────────────────────────┐), code:csharp (using (var uow = new UnitOfWork(dbContext))) (+1 more)
 
-### Community 28 - "Community 28"
+### Community 35 - "Community 35"
 Cohesion: 0.25
 Nodes (8): 2.1 Species Management, 2.2 Supplier Management, 2.3 Inventory Lots, 2.4 Sales Management, 2.5 Mortality Records, 2. BUSINESS RULES & DOMAIN LOGIC, code:block1 (CurrentStock = InitialQuantity - DeadOnArrival - TotalMortal), code:block2 (1. Validate all items have quantity > 0 and price >= 0)
 
-### Community 36 - "Community 36"
-Cohesion: 0.29
-Nodes (7): 5.1 Species Controller, 5.2 Suppliers Controller, 5.3 Inventory Lots Controller, 5.4 Sales Controller, 5.5 Catalog Controller, 5.6 Reports Controller, 5. API ENDPOINTS
+### Community 38 - "Community 38"
+Cohesion: 0.38
+Nodes (3): ILogger, GlobalExceptionHandler, RequestDelegate
 
-### Community 37 - "Community 37"
+### Community 47 - "Community 47"
 Cohesion: 0.29
 Nodes (6): 11. COMMON CAUSES FOR MORTALITY, 12. SPECIES CATEGORIES, 1. PROJECT OVERVIEW, Aquarium Manager - Project Context & Business Rules, Tech Stack, What It Is
 
-### Community 38 - "Community 38"
-Cohesion: 0.4
-Nodes (3): ILogger, GlobalExceptionHandler, RequestDelegate
-
-### Community 39 - "Community 39"
-Cohesion: 0.33
-Nodes (3): Migration, AquariumManager.Infrastructure.Migrations, RenameSupplierContactInfo
-
 ### Community 48 - "Community 48"
+Cohesion: 0.29
+Nodes (7): 5.1 Species Controller, 5.2 Suppliers Controller, 5.3 Inventory Lots Controller, 5.4 Sales Controller, 5.5 Catalog Controller, 5.6 Reports Controller, 5. API ENDPOINTS
+
+### Community 49 - "Community 49"
+Cohesion: 0.33
+Nodes (3): Migration, AquariumManager.Infrastructure.Migrations, MigrationName
+
+### Community 57 - "Community 57"
 Cohesion: 0.33
 Nodes (6): 7.1 Why FIFO?, 7.2 Why Mortality Records for Sales?, 7.3 Why No AutoMapper?, 7.4 Why Non-Generic Repositories?, 7.5 Why OperationResult Instead of Exceptions?, 7. DESIGN DECISIONS
 
-### Community 65 - "Community 65"
+### Community 81 - "Community 81"
 Cohesion: 0.4
 Nodes (3): AquariumDbContextModelSnapshot, AquariumManager.Infrastructure.Migrations, ModelSnapshot
 
-### Community 67 - "Community 67"
+### Community 83 - "Community 83"
 Cohesion: 0.4
 Nodes (5): 9. DEVELOPMENT WORKFLOW, Backend Commands, code:bash (# Run API), code:bash (# Development server), Frontend Commands
 
-### Community 89 - "Community 89"
-Cohesion: 0.5
-Nodes (4): 8. FUTURE ENHANCEMENTS (Layers 2 & 3), Layer 2: Advanced Management, Layer 3: Sales & E-commerce, Reporting Enhancements
-
-### Community 90 - "Community 90"
+### Community 94 - "Community 94"
 Cohesion: 0.5
 Nodes (4): 6.1 Pages to Implement, 6.2 Component Structure, 6. FRONTEND STRUCTURE, code:block13 (src/)
 
+### Community 95 - "Community 95"
+Cohesion: 0.5
+Nodes (4): 8. FUTURE ENHANCEMENTS (Layers 2 & 3), Layer 2: Advanced Management, Layer 3: Sales & E-commerce, Reporting Enhancements
+
 ## Knowledge Gaps
-- **96 isolated node(s):** `IHttpContextAccessor`, `RequestDelegate`, `ILogger`, `IDbContextTransaction`, `AquariumManager.Infrastructure.Migrations` (+91 more)
+- **107 isolated node(s):** `IHttpContextAccessor`, `RequestDelegate`, `ILogger`, `IDbContextTransaction`, `AquariumManager.Infrastructure.Migrations` (+102 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **88 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **111 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AquariumDbContext` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 10`?**
-  _High betweenness centrality (0.047) - this node is a cross-community bridge._
-- **Why does `TankService` connect `Community 2` to `Community 0`, `Community 1`, `Community 7`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
-- **Why does `ICurrentUserService` connect `Community 1` to `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 7`, `Community 10`?**
+- **Why does `AquariumDbContext` connect `Community 58` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 39`, `Community 40`, `Community 41`, `Community 9`, `Community 8`, `Community 15`, `Community 22`, `Community 59`?**
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+- **Why does `TankService` connect `Community 1` to `Community 0`, `Community 4`, `Community 39`, `Community 40`, `Community 41`, `Community 22`, `Community 59`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+- **Why does `ICurrentUserService` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 8`, `Community 9`, `Community 11`?**
   _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **What connects `IHttpContextAccessor`, `RequestDelegate`, `ILogger` to the rest of the system?**
-  _96 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _107 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.07 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.07 - nodes in this community are weakly interconnected._

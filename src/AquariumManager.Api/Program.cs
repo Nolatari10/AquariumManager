@@ -98,6 +98,7 @@ builder.Services.AddScoped<IInventoryLotRepository, InventoryLotRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 // Tank module repositories
 builder.Services.AddScoped<ITankRepository, TankRepository>();
@@ -123,6 +124,7 @@ builder.Services.AddScoped<IInventoryLotService, InventoryLotService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAlertService, AlertService>();

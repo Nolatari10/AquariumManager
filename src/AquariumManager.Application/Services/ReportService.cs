@@ -139,6 +139,7 @@ public class ReportService : IReportService
             SaleId = s.Id,
             Date = s.Date,
             CustomerName = s.CustomerName,
+            SaleType = s.SaleType.ToString(),
             TotalAmount = s.Items.Sum(i => i.Quantity * i.UnitPrice),
             ItemCount = s.Items.Count
         }).OrderByDescending(s => s.Date).ToList();

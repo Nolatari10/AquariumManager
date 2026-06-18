@@ -12,6 +12,7 @@ public class SaleService : ISaleService
     private readonly ISpeciesRepository _speciesRepository;
     private readonly ISpeciesVariantRepository _variantRepository;
     private readonly IInventoryLotService _inventoryLotService;
+    private readonly ICustomerRepository _customerRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
 
@@ -20,6 +21,7 @@ public class SaleService : ISaleService
         ISpeciesRepository speciesRepository,
         ISpeciesVariantRepository variantRepository,
         IInventoryLotService inventoryLotService,
+        ICustomerRepository customerRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser)
     {
@@ -27,6 +29,7 @@ public class SaleService : ISaleService
         _speciesRepository = speciesRepository;
         _variantRepository = variantRepository;
         _inventoryLotService = inventoryLotService;
+        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
     }
@@ -35,6 +38,19 @@ public class SaleService : ISaleService
     {
         if (saleDto.Items == null || saleDto.Items.Count == 0)
             return OperationResult<SaleDto>.Fail("La venta debe tener al menos un item.");
+
+        if (!Enum.TryParse<SaleType>(saleDto.SaleType, true, out var saleType))
+            return OperationResult<SaleDto>.Fail($"SaleType invalido: {saleDto.SaleType}");
+
+        Customer? customer = null;
+        if (saleDto.CustomerId.HasValue)
+        {
+            customer = await _customerRepository.GetByIdAsync(_currentUser.TenantId, saleDto.CustomerId.Value);
+            if (customer is null)
+                return OperationResult<SaleDto>.Fail($"El cliente con Id {saleDto.CustomerId} no existe.");
+            if (!customer.IsActive)
+                return OperationResult<SaleDto>.Fail($"El cliente {customer.Name} esta inactivo.");
+        }
 
         foreach (var item in saleDto.Items)
         {
@@ -83,10 +99,15 @@ public class SaleService : ISaleService
         await _unitOfWork.BeginTransactionAsync();
         try
         {
+            var customerName = customer?.Name ?? saleDto.CustomerName;
+
             var sale = new Sale
             {
                 Date = saleDto.Date,
-                CustomerName = saleDto.CustomerName
+                CustomerName = customerName,
+                CustomerId = saleDto.CustomerId,
+                SaleType = saleType,
+                OrderNote = saleDto.OrderNote
             };
             sale.TenantId = _currentUser.TenantId;
 
@@ -192,6 +213,10 @@ public class SaleService : ISaleService
             Id = sale.Id,
             Date = sale.Date,
             CustomerName = sale.CustomerName,
+            CustomerId = sale.CustomerId,
+            CustomerType = sale.Customer?.CustomerType.ToString(),
+            SaleType = sale.SaleType.ToString(),
+            OrderNote = sale.OrderNote,
             TotalAmount = sale.Items.Sum(i => i.Quantity * i.UnitPrice),
             Items = sale.Items.Select(i => new SaleItemDto
             {

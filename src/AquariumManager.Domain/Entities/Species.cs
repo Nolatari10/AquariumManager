@@ -18,6 +18,8 @@ public class Species
     public string? Notes { get; private set; }
 
     public string ImageUrl { get;  set; } = string.Empty;
+    public decimal? RetailPrice { get; set; }
+    public decimal? WholesalePrice { get; set; }
 
     public ICollection<SpeciesVariant> Variants { get; private set; } = new List<SpeciesVariant>();
 
@@ -35,7 +37,9 @@ public class Species
         string? compatibilityNotes,
         string category,
         string? notes = null,
-        string imageUrl = "")
+        string imageUrl = "",
+        decimal? retailPrice = null,
+        decimal? wholesalePrice = null)
     {
         CommonName = commonName;
         ScientificName = scientificName;
@@ -49,6 +53,8 @@ public class Species
         Category = category;
         Notes = notes;
         ImageUrl = imageUrl;
+        RetailPrice = retailPrice;
+        WholesalePrice = wholesalePrice;
     }
 
     public void UpdateInfo(
@@ -63,7 +69,9 @@ public class Species
         string? compatibilityNotes,
         string category,
         string? notes,
-        string? imageUrl = null)
+        string? imageUrl = null,
+        decimal? retailPrice = null,
+        decimal? wholesalePrice = null)
     {
         CommonName = commonName;
         ScientificName = scientificName;
@@ -77,5 +85,7 @@ public class Species
         Category = category;
         Notes = notes;
         ImageUrl = imageUrl ?? string.Empty;
+        RetailPrice = retailPrice;
+        WholesalePrice = wholesalePrice;
     }
 }

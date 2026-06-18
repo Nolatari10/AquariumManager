@@ -39,7 +39,9 @@ public class SpeciesService : ISpeciesService
             dto.CompatibilityNotes,
             dto.Category,
             dto.Notes,
-            dto.ImageUrl
+            dto.ImageUrl,
+            dto.RetailPrice,
+            dto.WholesalePrice
         );
 
         species.TenantId = _currentUser.TenantId;
@@ -102,7 +104,9 @@ public class SpeciesService : ISpeciesService
             dto.CompatibilityNotes,
             dto.Category,
             dto.Notes, 
-            dto.ImageUrl
+            dto.ImageUrl,
+            dto.RetailPrice,
+            dto.WholesalePrice
         );
 
         await _speciesRepository.UpdateAsync(species);
@@ -174,7 +178,9 @@ public class SpeciesService : ISpeciesService
                     dto.CompatibilityNotes?.Trim(),
                     string.IsNullOrWhiteSpace(dto.Category) ? "Other" : dto.Category.Trim(),
                     dto.Notes?.Trim(),
-                    dto.ImageUrl?.Trim() ?? string.Empty
+                    dto.ImageUrl?.Trim() ?? string.Empty,
+                    dto.RetailPrice,
+                    dto.WholesalePrice
                 );
 
                 species.TenantId = _currentUser.TenantId;
@@ -220,6 +226,8 @@ public class SpeciesService : ISpeciesService
         CompatibilityNotes = s.CompatibilityNotes,
         Category = s.Category,
         Notes = s.Notes,
-        ImageUrl = s.ImageUrl
+        ImageUrl = s.ImageUrl,
+        RetailPrice = s.RetailPrice,
+        WholesalePrice = s.WholesalePrice
     };
 }
